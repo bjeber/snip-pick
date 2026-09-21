@@ -3,12 +3,42 @@
 Snippets and shell commands where you need them: in the editor, and — optionally — shared with
 your team.
 
-| Package                                      | What it is                                                                                                                                             |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`apps/extension`](apps/extension)           | The VS Code extension. Works entirely offline against local JSON files; this is the whole product if you never run a server.                           |
-| [`apps/api`](apps/api)                       | A self-hostable multi-tenant API (Hono + better-auth + Postgres) that stores shared vaults. Optional.                                                  |
-| [`packages/core`](packages/core)             | The data model, relevance scoring, template parsing and importers. Free of `vscode` and of server-only dependencies, so both sides share one contract. |
-| [`packages/api-client`](packages/api-client) | Typed API client and the OAuth 2.1 + PKCE flow. Platform-agnostic, so the token exchange is testable without an editor.                                |
+## Layout
+
+Each package owns one area, and the edges point one way — the graph below is acyclic and every
+package declares exactly what it imports. Four packages depend on nothing at all.
+
+```
+apps/extension  ──►  contracts, core, api-client
+apps/api        ──►  contracts, config, db, auth, auth-verify
+
+core            ──►  contracts
+api-client      ──►  contracts
+auth            ──►  config, db
+
+contracts, config, db, auth-verify  ──►  nothing
+```
+
+| Package                                        | What it is                                                                                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`apps/extension`](apps/extension)             | The VS Code extension. Works entirely offline against local JSON files; this is the whole product if you never run a server.                      |
+| [`apps/api`](apps/api)                         | A self-hostable multi-tenant API that stores shared vaults. Composition and HTTP routing only — the pieces it wires together are below. Optional. |
+| [`packages/contracts`](packages/contracts)     | Types and validation both ends of the wire must agree on. No runtime dependencies and no platform APIs at all.                                    |
+| [`packages/core`](packages/core)               | Snippet behaviour for the editor: ranking, variables, danger detection, merging, discovery, import. Runs in a web extension host too.             |
+| [`packages/api-client`](packages/api-client)   | Typed API client and the OAuth 2.1 + PKCE flow. Platform-agnostic, so the token exchange is testable without an editor.                           |
+| [`packages/config`](packages/config)           | Server configuration, read from the environment and validated in one place.                                                                       |
+| [`packages/db`](packages/db)                   | Postgres schema, drizzle client factory and migrations. Server-only.                                                                              |
+| [`packages/auth`](packages/auth)               | The authorization server: better-auth, its OAuth 2.1 provider, first-party client seeding. Server-only.                                           |
+| [`packages/auth-verify`](packages/auth-verify) | The resource-server half: verifies access tokens against a JWK set. No database, no better-auth.                                                  |
+
+Two rules keep that shape, and both are enforced rather than documented:
+
+- **Packages export factories, not singletons.** `createDb(config)`, `createAuth({db, config})`.
+  Importing a package never reads the environment or opens a socket, so a unit test, a migration
+  script and drizzle-kit can all reach it. Apps are composition roots and may hold the singleton.
+- **Server code and extension code cannot mix.** `eslint.config.mjs` rejects the import in either
+  direction; `apps/extension/esbuild.mjs` rejects the artifact, failing the build and writing
+  nothing if a server module reaches the bundle through any path.
 
 ## Getting started
 
