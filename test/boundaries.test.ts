@@ -77,6 +77,8 @@ const EXPECTED: Record<string, Ban[]> = {
   'packages/auth/src': ['vscode'],
   'packages/auth-verify/src': ['vscode'],
   'apps/api/src': ['vscode'],
+  // Development tooling, run by a person at a terminal. Server side like the rest of this list.
+  'tools/db/src': ['vscode'],
 };
 
 const root = process.cwd();

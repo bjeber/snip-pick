@@ -33,6 +33,8 @@ const EXPECTED_COMMANDS = [
   'snipPick.copyDiscovered',
   'snipPick.signIn',
   'snipPick.signOut',
+  'snipPick.setServerUrl',
+  'snipPick.resolveConflicts',
   'snipPick.selectVaults',
   'snipPick.refreshRemote',
 ];
@@ -164,6 +166,80 @@ suite('Snip Pick', () => {
       assert.ok(String(item.id).length > 0);
     } finally {
       await api.store.deleteGroup(USER_SCOPE_ID, group.id, 'deleteItems');
+    }
+  });
+
+  test('refuses to drag an item into another scope by default', async () => {
+    const workspace = api.store.workspaceScopes().find((scope) => !scope.readonly);
+    assert.ok(workspace, 'the fixture workspace should be writable');
+    assert.equal(
+      vscode.workspace.getConfiguration('snipPick').get<boolean>('allowCrossScopeDrag'),
+      false,
+      'snipPick.allowCrossScopeDrag must ship disabled',
+    );
+
+    const item = await add(USER_SCOPE_ID, { title: 'Stays put' });
+    const transfer = new vscode.DataTransfer();
+    api.tree.handleDrag([{ kind: 'item', scopeId: USER_SCOPE_ID, itemId: item.id }], transfer);
+    await api.tree.handleDrop({ kind: 'scope', scopeId: workspace.id }, transfer);
+
+    assert.ok(
+      api.store.items(USER_SCOPE_ID).some((entry) => entry.id === item.id),
+      'the item should still be in the scope it was dragged from',
+    );
+    assert.ok(
+      !api.store.items(workspace.id).some((entry) => entry.id === item.id),
+      'a refused drop must not write to the other scope at all',
+    );
+  });
+
+  test('still drags an item between groups of one scope', async () => {
+    const group = await api.store.addGroup(USER_SCOPE_ID, 'Drop target');
+    try {
+      const item = await add(USER_SCOPE_ID, { title: 'Moves within User' });
+      const transfer = new vscode.DataTransfer();
+      api.tree.handleDrag([{ kind: 'item', scopeId: USER_SCOPE_ID, itemId: item.id }], transfer);
+      await api.tree.handleDrop(
+        { kind: 'group', scopeId: USER_SCOPE_ID, groupId: group.id },
+        transfer,
+      );
+
+      assert.equal(
+        api.store.getItem({ scopeId: USER_SCOPE_ID, itemId: item.id })?.groupId,
+        group.id,
+        'the cross-scope guard must not affect drags inside one scope',
+      );
+    } finally {
+      await api.store.deleteGroup(USER_SCOPE_ID, group.id, 'deleteItems');
+    }
+  });
+
+  test('renders the remote rows for a configured server', async () => {
+    // Workspace target, so this lands in the fixture rather than in the settings of whatever
+    // VS Code is running the suite.
+    const config = vscode.workspace.getConfiguration('snipPick');
+    await config.update(
+      'remote.url',
+      'http://localhost:8787',
+      vscode.ConfigurationTarget.Workspace,
+    );
+    try {
+      await api.remote.refresh();
+      const signIn = api.tree.getChildren().find((node) => node.kind === 'signIn');
+      assert.ok(signIn, 'a configured server should offer a way to sign in');
+
+      const item = api.tree.getTreeItem(signIn);
+      assert.equal(item.label, 'Sign in');
+      assert.equal(
+        item.description,
+        'localhost:8787',
+        'the row shows the host; the scheme is the least informative part of the URL',
+      );
+      assert.equal(item.command?.command, 'snipPick.signIn');
+      assert.equal(item.contextValue, 'signIn', 'the gear that edits the server hangs off this');
+    } finally {
+      await config.update('remote.url', undefined, vscode.ConfigurationTarget.Workspace);
+      await api.remote.refresh();
     }
   });
 

@@ -369,6 +369,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@snip-pick/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0)
@@ -382,6 +385,25 @@ importers:
       drizzle-kit:
         specifier: 'catalog:'
         version: 0.31.10
+
+  tools/db:
+    dependencies:
+      '@snip-pick/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@snip-pick/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@snip-pick/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0)
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
 packages:
 

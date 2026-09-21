@@ -9,6 +9,7 @@ import {
   parseCallback,
   randomString,
   refreshTokens,
+  registrableRedirectUri,
   TokenError,
   type TokenSet,
 } from '@snip-pick/api-client';
@@ -148,11 +149,13 @@ export class SnipPickAuthProvider implements vscode.AuthenticationProvider, vsco
     const server = await describeServer(serverUrl);
 
     // asExternalUri makes the callback work under Remote SSH, Codespaces and vscode.dev, where
-    // the editor is not the thing the browser can reach directly.
+    // the editor is not the thing the browser can reach directly. On the desktop it also appends
+    // a windowId, which no registered redirect URI can contain — see registrableRedirectUri.
     const callback = await vscode.env.asExternalUri(
       vscode.Uri.parse(`${vscode.env.uriScheme}://bieber.snip-pick/auth`),
     );
-    const redirectUri = callback.toString(true);
+    const redirectUri = registrableRedirectUri(callback.toString(true), vscode.env.uriScheme);
+    log().info(`Redirecting to ${redirectUri} after sign-in`);
 
     const pkce = await createPkcePair();
     const state = randomString(16);
@@ -176,7 +179,18 @@ export class SnipPickAuthProvider implements vscode.AuthenticationProvider, vsco
     const opened = await vscode.env.openExternal(vscode.Uri.parse(authorizeUrl));
     if (!opened) throw new Error('Could not open a browser to complete sign-in.');
 
-    const callbackUri = await waiting;
+    let callbackUri: vscode.Uri;
+    try {
+      callbackUri = await waiting;
+    } catch (error) {
+      // Nothing came back. The likeliest reason by far is that the server refused the redirect
+      // URI and answered its own error page, which this side never sees — so the value that was
+      // actually sent goes in the message rather than leaving it to be guessed at.
+      throw new Error(
+        `${(error as Error).message} The server was asked to redirect to ${redirectUri} — if it ` +
+          'answered "invalid redirect uri", that is not a URI this client is registered for.',
+      );
+    }
     const code = parseCallback(callbackUri.toString(true), {
       state,
       issuer: server.metadata.issuer,
@@ -241,19 +255,63 @@ export class SnipPickAuthProvider implements vscode.AuthenticationProvider, vsco
 export async function resolveServerUrl(): Promise<string | undefined> {
   const configured = SnipPickAuthProvider.configuredServerUrl();
   if (configured) return configured;
+  return promptForServerUrl();
+}
 
+/**
+ * Checks a URL before it is saved.
+ *
+ * A path is legitimate — a deployment behind a reverse proxy at `https://host/snippick` is a real
+ * arrangement the server supports — so this warns rather than refuses. The one it warns about is
+ * the mistake the server's own startup output invites: it prints an `issuer` and a `resource`,
+ * and the resource is the base URL plus `/v1`. Discovery reads its metadata from the base, so a
+ * resource identifier pasted in here reaches the vault routes instead and is answered with a
+ * bearer-token error that says nothing about the URL being wrong.
+ */
+function validateServerUrl(value: string): vscode.InputBoxValidationMessage | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
+  } catch {
+    return { message: 'Not a valid URL.', severity: vscode.InputBoxValidationSeverity.Error };
+  }
+  if (/\/v1\/*$/.test(url.pathname)) {
+    return {
+      message: `That looks like the resource identifier. The base URL is probably ${url.origin}${url.pathname.replace(/\/v1\/*$/, '')}.`,
+      severity: vscode.InputBoxValidationSeverity.Warning,
+    };
+  }
+  return undefined;
+}
+
+/**
+ * Asks for the server URL and saves it. An empty answer clears the setting, which is the way
+ * back out of a URL that turned out to be wrong: without it a failed server is stuck, because
+ * every path that needs one finds the broken value already configured and never asks again.
+ */
+export async function promptForServerUrl(): Promise<string | undefined> {
+  const current = SnipPickAuthProvider.configuredServerUrl();
   const entered = await vscode.window.showInputBox({
     title: 'Snip Pick server',
-    prompt: 'URL of your Snip Pick API',
+    prompt: current
+      ? 'URL of your Snip Pick API. Leave it empty to disconnect and stay local.'
+      : 'URL of your Snip Pick API',
     placeHolder: 'https://snippets.your-company.internal',
+    value: current ?? '',
     ignoreFocusOut: true,
-    validateInput: (value) => (value.trim().length === 0 ? 'A URL is required' : undefined),
+    validateInput: validateServerUrl,
   });
-  if (!entered) return undefined;
+  // Escape — as opposed to an empty box, which is the explicit "disconnect" above.
+  if (entered === undefined) return undefined;
 
+  const trimmed = entered.trim();
   const target = vscode.workspace.workspaceFolders
     ? vscode.ConfigurationTarget.Workspace
     : vscode.ConfigurationTarget.Global;
-  await vscode.workspace.getConfiguration('snipPick').update('remote.url', entered.trim(), target);
-  return entered.trim();
+  await vscode.workspace
+    .getConfiguration('snipPick')
+    .update('remote.url', trimmed.length > 0 ? trimmed : undefined, target);
+  return trimmed.length > 0 ? trimmed : undefined;
 }

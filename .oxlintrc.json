@@ -44,7 +44,7 @@
     {
       // Server code must not reach for the editor API. It is what lets the model, the sync client
       // and the server share one contract, and what keeps all three testable.
-      "files": ["packages/**/*.ts", "apps/api/**/*.ts"],
+      "files": ["packages/**/*.ts", "apps/api/**/*.ts", "tools/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",

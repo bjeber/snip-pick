@@ -71,6 +71,8 @@ class ScopeState {
  */
 export class Store implements vscode.Disposable {
   private readonly states = new Map<string, ScopeState>();
+  /** Set by the remote service as vaults are mounted and unmounted. */
+  private remoteScopes: ScopeInfo[] = [];
   private readonly watchers: vscode.Disposable[] = [];
   private readonly reloadTimers = new Map<string, NodeJS.Timeout>();
   private readonly reportedErrors = new Set<string>();
@@ -111,6 +113,30 @@ export class Store implements vscode.Disposable {
     return this.scopes().filter((scope) => scope.kind === 'workspace');
   }
 
+  /**
+   * Replaces the set of mounted vaults.
+   *
+   * A vault is an ordinary scope backed by an ordinary file — it just happens to live in global
+   * storage and to be reconciled with a server. Everything that edits a snippet therefore works
+   * on it unchanged, which is the whole reason the remote/local split stays a detail of where
+   * the bytes are.
+   */
+  async setRemoteScopes(scopes: readonly ScopeInfo[]): Promise<void> {
+    this.remoteScopes = [...scopes];
+    await this.refreshScopes();
+  }
+
+  /**
+   * Overwrites a scope wholesale. The sync engine's way in: it produces a merged file rather
+   * than a sequence of edits.
+   */
+  async replaceFile(scopeId: string, file: SnipPickFile): Promise<void> {
+    await this.mutate(scopeId, (draft) => {
+      draft.groups = file.groups.map((group) => ({ ...group }));
+      draft.items = file.items.map((item) => ({ ...item }));
+    });
+  }
+
   errorFor(scopeId: string): ScopeError | undefined {
     return this.states.get(scopeId)?.error;
   }
@@ -138,6 +164,7 @@ export class Store implements vscode.Disposable {
       readonly: false,
       fileUri: vscode.Uri.joinPath(this.context.globalStorageUri, 'snippick.json'),
     });
+    for (const scope of this.remoteScopes) wanted.set(scope.id, scope);
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
       wanted.set(folder.uri.toString(), {
         id: folder.uri.toString(),

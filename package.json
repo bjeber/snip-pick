@@ -22,8 +22,11 @@
     "test": "pnpm run test:unit && pnpm run test:integration",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run test:unit && pnpm run build",
     "package": "pnpm --filter snip-pick run package",
-    "db:up": "docker compose up -d db",
-    "db:down": "docker compose down"
+    "db:up": "pnpm --filter @snip-pick/db-tools run up",
+    "db:down": "pnpm --filter @snip-pick/db-tools run down",
+    "db:reset": "pnpm --filter @snip-pick/db-tools run reset",
+    "db:migrate": "pnpm --filter @snip-pick/db-tools run migrate",
+    "db:seed": "pnpm --filter @snip-pick/db-tools run seed"
   },
   "devDependencies": {
     "@types/node": "catalog:",

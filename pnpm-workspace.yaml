@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+  - 'tools/*'
 
 # pnpm does not run a dependency's install scripts unless it is listed here. These are the three
 # that have them, and all three keep the behaviour npm gave them: esbuild's postinstall fetches

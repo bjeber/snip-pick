@@ -21,6 +21,7 @@ export * from './runner/variables';
 export * from './runner/danger';
 
 export * from './store/merge';
+export * from './store/sync';
 export * from './store/usage';
 
 export * from './discovery/parsers';

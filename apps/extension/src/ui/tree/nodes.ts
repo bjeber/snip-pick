@@ -43,21 +43,19 @@ export interface DiscoveryItemNode {
   task: DiscoveredTask;
 }
 
-export interface RemoteVaultNode {
-  kind: 'remoteVault';
-  serverUrl: string;
-  vaultId: string;
-}
-
-/** Placeholder under a mounted vault until delta sync lands. */
-export interface RemoteNoticeNode {
-  kind: 'remoteNotice';
-  vaultId: string;
-  message: string;
+/** A mounted vault with decisions outstanding, shown at the top of its scope. */
+export interface VaultConflictsNode {
+  kind: 'vaultConflicts';
+  scopeId: string;
 }
 
 export interface SignInNode {
   kind: 'signIn';
+}
+
+/** Signed in, but nothing mounted yet — the step between signing in and seeing a vault. */
+export interface SelectVaultsNode {
+  kind: 'selectVaults';
 }
 
 export type TreeNode =
@@ -68,9 +66,9 @@ export type TreeNode =
   | DiscoveryRootNode
   | DiscoveryGroupNode
   | DiscoveryItemNode
-  | RemoteVaultNode
-  | RemoteNoticeNode
-  | SignInNode;
+  | VaultConflictsNode
+  | SignInNode
+  | SelectVaultsNode;
 
 export function nodeId(node: TreeNode): string {
   switch (node.kind) {
@@ -88,12 +86,12 @@ export function nodeId(node: TreeNode): string {
       return `discovery:${node.folderUri}:${node.source}`;
     case 'discoveryItem':
       return `discovery:${node.folderUri}:${node.source}:${node.task.name}`;
-    case 'remoteVault':
-      return `remote:${node.serverUrl}:${node.vaultId}`;
-    case 'remoteNotice':
-      return `remote-notice:${node.vaultId}`;
+    case 'vaultConflicts':
+      return `vault-conflicts:${node.scopeId}`;
     case 'signIn':
       return 'remote:sign-in';
+    case 'selectVaults':
+      return 'remote:select-vaults';
   }
 }
 

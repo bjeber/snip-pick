@@ -5,9 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 /**
  * End-to-end authorization-code + PKCE flow against a real server and a real database.
  *
- * Skipped unless DATABASE_URL and BETTER_AUTH_SECRET are both set, so `npm run test:unit` stays
- * runnable without Postgres. Start one with `npm run db:up` from the repo root, then apply
- * `npm run db:migrate -w apps/api`.
+ * Skipped unless DATABASE_URL and BETTER_AUTH_SECRET are both set, so `pnpm run test:unit` stays
+ * runnable without Postgres. `pnpm run db:reset` from the repo root gives you one, migrated.
  *
  * The secret must be the one the database was populated with: better-auth encrypts the JWKS
  * private key with it, so a mismatched secret fails to sign tokens rather than failing loudly up

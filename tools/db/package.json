@@ -1,0 +1,27 @@
+{
+  "name": "@snip-pick/db-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The local Postgres container and the commands that drive it. Development only; nothing ships.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "up": "docker compose up -d --wait",
+    "down": "docker compose down",
+    "reset": "docker compose down --volumes && pnpm run up && pnpm run migrate && pnpm run seed",
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts",
+    "psql": "docker compose exec db psql -U snippick snippick",
+    "logs": "docker compose logs -f db"
+  },
+  "dependencies": {
+    "@snip-pick/auth": "workspace:*",
+    "@snip-pick/config": "workspace:*",
+    "@snip-pick/db": "workspace:*",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "tsx": "catalog:"
+  }
+}

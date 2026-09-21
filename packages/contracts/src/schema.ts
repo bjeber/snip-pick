@@ -83,9 +83,16 @@ function validateGroup(value: unknown, index: number, errors: string[]): Group |
   } else if (value.order !== undefined) {
     errors.push(`${path}.order must be a number`);
   }
+  let updatedAt: number | undefined;
+  if (typeof value.updatedAt === 'number' && Number.isFinite(value.updatedAt)) {
+    updatedAt = value.updatedAt;
+  } else if (value.updatedAt !== undefined) {
+    errors.push(`${path}.updatedAt must be a number`);
+  }
   if (id === undefined || name === undefined) return undefined;
   const group: Group = { id, name, order };
   if (parentId !== undefined) group.parentId = parentId;
+  if (updatedAt !== undefined) group.updatedAt = updatedAt;
   return group;
 }
 

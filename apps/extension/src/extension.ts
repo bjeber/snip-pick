@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<SnipPi
   const discovery = new DiscoveryService();
   const terminals = new TerminalRunner();
   const authProvider = new SnipPickAuthProvider(context);
-  const remote = new RemoteService(context, authProvider);
+  const remote = new RemoteService(context, authProvider, store);
   const resolver = new TemplateResolver(secrets, history);
   const runner = new ItemRunner(store, usage, resolver, terminals, contextService);
 

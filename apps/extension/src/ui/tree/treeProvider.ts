@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import type { ContextService } from '../../context/contextService';
 import { rankItems, scoreRelevance } from '@snip-pick/core';
-import { bodyPreview, commandText, type Group, type Item } from '@snip-pick/contracts';
+import { bodyPreview, commandText, type Group, type Item, type Scope } from '@snip-pick/contracts';
 import type { DiscoveryService } from '../../discovery/discoveryService';
 import type { RemoteService } from '../../remote/remoteService';
 import type { ItemRef, ScopeInfo, Store } from '../../store/store';
@@ -10,6 +10,12 @@ import { ItemDecorationProvider, type ItemDecorationState } from './decorations'
 import { itemResourceUri, nodeId, type TreeNode } from './nodes';
 
 export const DND_MIME = 'application/vnd.code.tree.snippick.library';
+
+function scopeIcon(kind: Scope | undefined): string {
+  if (kind === 'user') return 'account';
+  if (kind === 'remote') return 'cloud';
+  return 'root-folder';
+}
 
 function sortGroups(groups: Group[]): Group[] {
   return [...groups].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
@@ -85,14 +91,6 @@ export class LibraryTreeProvider
         return this.discoveryGroups(element.folderUri);
       case 'discoveryGroup':
         return this.discoveryItems(element.folderUri, element.source);
-      case 'remoteVault':
-        return [
-          {
-            kind: 'remoteNotice',
-            vaultId: element.vaultId,
-            message: 'Sync is not implemented yet',
-          },
-        ];
       default:
         return [];
     }
@@ -113,9 +111,9 @@ export class LibraryTreeProvider
     const state = this.remote.current();
     if (!state.serverUrl) return [];
     if (!this.remote.signedIn()) return [{ kind: 'signIn' }];
-    return this.remote
-      .mounted()
-      .map((vault) => ({ kind: 'remoteVault', serverUrl: state.serverUrl!, vaultId: vault.id }));
+    // A mounted vault is a store scope, so it is already among the roots above. All that is
+    // left for this slot is the step that puts one there.
+    return this.remote.mounted().length === 0 ? [{ kind: 'selectVaults' }] : [];
   }
 
   private isLibraryEmpty(): boolean {
@@ -130,6 +128,9 @@ export class LibraryTreeProvider
   private scopeChildren(scopeId: string): TreeNode[] {
     const nodes: TreeNode[] = [];
     if (this.store.errorFor(scopeId)) nodes.push({ kind: 'error', scopeId });
+    if (this.remote.engine.conflictsFor(scopeId).length > 0) {
+      nodes.push({ kind: 'vaultConflicts', scopeId });
+    }
     const groups = sortGroups(this.store.groups(scopeId).filter((g) => g.parentId === undefined));
     nodes.push(
       ...groups.map((group) => ({ kind: 'group', scopeId, groupId: group.id }) as TreeNode),
@@ -208,12 +209,8 @@ export class LibraryTreeProvider
         return { kind: 'discoveryRoot', folderUri: element.folderUri };
       case 'discoveryItem':
         return { kind: 'discoveryGroup', folderUri: element.folderUri, source: element.source };
-      case 'remoteNotice': {
-        const state = this.remote.current();
-        return state.serverUrl
-          ? { kind: 'remoteVault', serverUrl: state.serverUrl, vaultId: element.vaultId }
-          : undefined;
-      }
+      case 'vaultConflicts':
+        return { kind: 'scope', scopeId: element.scopeId };
       default:
         return undefined;
     }
@@ -257,37 +254,55 @@ export class LibraryTreeProvider
         node.contextValue = 'discoveredGroup';
         return node;
       }
-      case 'remoteVault': {
-        const vault = this.remote.vaults().find((entry) => entry.id === element.vaultId);
+      case 'vaultConflicts': {
+        const count = this.remote.engine.conflictsFor(element.scopeId).length;
         const node = new vscode.TreeItem(
-          vault?.name ?? '(unknown vault)',
-          vscode.TreeItemCollapsibleState.Collapsed,
+          count === 1 ? '1 conflict to resolve' : `${count} conflicts to resolve`,
+          vscode.TreeItemCollapsibleState.None,
         );
         node.iconPath = new vscode.ThemeIcon(
-          vault?.kind === 'personal' ? 'account' : 'organization',
+          'warning',
+          new vscode.ThemeColor('list.warningForeground'),
         );
-        node.description = vault?.organization.name;
-        node.contextValue = 'remoteVault';
+        node.contextValue = 'vaultConflicts';
+        node.description = 'this vault is not syncing';
         node.tooltip = new vscode.MarkdownString(
-          `**${vault?.name ?? 'Vault'}**\n\n${vault?.kind === 'personal' ? 'Your private vault' : 'Shared project vault'} on \`${element.serverUrl}\``,
+          'Someone else changed the same entries you did. Nothing is sent or overwritten until ' +
+            'you say which version to keep.',
         );
-        return node;
-      }
-      case 'remoteNotice': {
-        const node = new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None);
-        node.iconPath = new vscode.ThemeIcon('info');
-        node.contextValue = 'remoteNotice';
+        node.command = {
+          command: 'snipPick.resolveConflicts',
+          title: 'Resolve Conflicts',
+          arguments: [element.scopeId],
+        };
         return node;
       }
       case 'signIn': {
-        const node = new vscode.TreeItem(
-          'Sign in to load remote vaults',
-          vscode.TreeItemCollapsibleState.None,
-        );
+        const { serverUrl } = this.remote.current();
+        const node = new vscode.TreeItem('Sign in', vscode.TreeItemCollapsibleState.None);
         node.iconPath = new vscode.ThemeIcon('sign-in');
         node.contextValue = 'signIn';
-        node.description = this.remote.current().serverUrl;
+        node.description = serverHost(serverUrl);
+        node.tooltip = remoteTooltip(
+          serverUrl,
+          'Opens your browser so the server can authenticate you. The gear changes the server, or clears it to stay local.',
+        );
         node.command = { command: 'snipPick.signIn', title: 'Sign In' };
+        return node;
+      }
+      case 'selectVaults': {
+        const { serverUrl } = this.remote.current();
+        const node = new vscode.TreeItem('Select vaults', vscode.TreeItemCollapsibleState.None);
+        node.iconPath = new vscode.ThemeIcon('cloud');
+        node.contextValue = 'selectVaults';
+        // The host, not the account: `account.label` is the raw user id the API answers with,
+        // which is not a thing to put in a sidebar.
+        node.description = serverHost(serverUrl);
+        node.tooltip = remoteTooltip(
+          serverUrl,
+          'Signed in, with nothing mounted yet. Choose which of this server\u2019s vaults appear in the tree.',
+        );
+        node.command = { command: 'snipPick.selectVaults', title: 'Select Vaults' };
         return node;
       }
       case 'discoveryItem': {
@@ -315,15 +330,31 @@ export class LibraryTreeProvider
       ? scopeId
       : scope.kind === 'user'
         ? 'User'
-        : multiRoot
+        : scope.kind === 'remote'
           ? scope.label
-          : 'Workspace';
+          : multiRoot
+            ? scope.label
+            : 'Workspace';
     const node = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Expanded);
-    node.iconPath = new vscode.ThemeIcon(scope?.kind === 'user' ? 'account' : 'root-folder');
-    node.contextValue = scope?.readonly ? 'scopeRoot.readonly' : 'scopeRoot';
+    node.iconPath = new vscode.ThemeIcon(scopeIcon(scope?.kind));
+    node.contextValue = scope?.readonly
+      ? 'scopeRoot.readonly'
+      : scope?.kind === 'remote'
+        ? 'remoteScopeRoot'
+        : 'scopeRoot';
     if (scope?.readonly) node.description = 'read-only';
+    else if (scope?.kind === 'remote') node.description = this.remoteScopeDescription(scopeId);
     node.tooltip = scope ? scope.fileUri.fsPath : undefined;
     return node;
+  }
+
+  /** What a mounted vault is currently doing, in the space beside its name. */
+  private remoteScopeDescription(scopeId: string): string | undefined {
+    const state = this.remote.engine.state(scopeId);
+    if (!state) return undefined;
+    if (state.conflicts.length > 0) return 'conflicts';
+    if (state.error) return 'not synced';
+    return `synced · r${state.vault.revision}`;
   }
 
   private groupItem(scopeId: string, groupId: string): vscode.TreeItem {
@@ -399,8 +430,19 @@ export class LibraryTreeProvider
     const destination = this.dropDestination(target);
     if (!destination) return;
 
+    // Checked here rather than per node, so one warning covers a multi-selection drag.
+    const moving = crossScopeDragAllowed()
+      ? nodes
+      : nodes.filter((node) => draggedScopeId(node) === destination.scopeId);
+    if (moving.length < nodes.length) {
+      void vscode.window.showWarningMessage(
+        'Snip Pick: dragging between scopes is turned off. Turn on `snipPick.allowCrossScopeDrag` ' +
+          'to allow it, or use Export… / Import… to move items deliberately.',
+      );
+    }
+
     try {
-      for (const node of nodes) {
+      for (const node of moving) {
         if (node.kind === 'item') await this.dropItem(node.scopeId, node.itemId, destination);
         else if (node.kind === 'group') {
           await this.dropGroup(node.scopeId, node.groupId, destination, target);
@@ -486,6 +528,47 @@ export class LibraryTreeProvider
     order.splice(index + 1, 0, movedId);
     await this.store.reorderGroups(scopeId, order);
   }
+}
+
+/**
+ * The server as it reads in a sidebar: host and path, without the scheme.
+ *
+ * `http://` is the least informative part of a URL and the widest thing competing with the label
+ * for a column that is usually narrow. The whole URL is one hover away, in the tooltip.
+ */
+function serverHost(serverUrl: string | undefined): string | undefined {
+  if (!serverUrl) return undefined;
+  try {
+    const url = new URL(serverUrl);
+    // url.host keeps a non-default port (localhost:8787) and drops :80 and :443, which is
+    // exactly the distinction worth showing.
+    return `${url.host}${url.pathname.replace(/\/+$/, '')}`;
+  } catch {
+    return serverUrl;
+  }
+}
+
+function remoteTooltip(serverUrl: string | undefined, detail: string): vscode.MarkdownString {
+  const markdown = new vscode.MarkdownString();
+  markdown.appendMarkdown('**Remote vaults**\n\n');
+  if (serverUrl) markdown.appendMarkdown(`${escapeMarkdown(serverUrl)}\n\n`);
+  markdown.appendMarkdown(detail);
+  return markdown;
+}
+
+/**
+ * The scope a dragged node belongs to.
+ *
+ * Only items and groups are draggable — handleDrag puts nothing else on the DataTransfer — but
+ * the transfer arrives back as an unnarrowed TreeNode[], so the narrowing happens here. Anything
+ * else answers undefined, which no scope id matches, and the node is dropped.
+ */
+function draggedScopeId(node: TreeNode): string | undefined {
+  return node.kind === 'item' || node.kind === 'group' ? node.scopeId : undefined;
+}
+
+function crossScopeDragAllowed(): boolean {
+  return vscode.workspace.getConfiguration('snipPick').get<boolean>('allowCrossScopeDrag', false);
 }
 
 async function confirmScopeMove(

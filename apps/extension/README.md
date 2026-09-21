@@ -69,9 +69,12 @@ test scaffolding, its deploy steps — and commit `.vscode/snippick.json` so the
 them on clone. In a multi-root workspace each folder gets its own file and its own root in the
 tree.
 
-Move an item between levels by dragging it in the tree; you are asked to confirm, because it means
-writing to a different file. `snipPick.defaultScope` decides which level is pre-selected when you
-create something.
+Dragging inside a level rearranges it — items into groups, groups into groups. Dragging _across_
+levels is refused by default, because the drop writes the item into a different file and it is an
+easy thing to do by accident while reordering. Turn on `snipPick.allowCrossScopeDrag` if you want
+it; you are then still asked to confirm each move. Otherwise, **Snip Pick: Export…** and
+**Import…** are the deliberate route. `snipPick.defaultScope` decides which level is pre-selected
+when you create something, which is usually the better place to get this right.
 
 > One thing the user level does **not** do: follow you to another machine. Settings Sync carries
 > settings and usage statistics, not arbitrary files, and keeping the library as plain diffable
@@ -171,6 +174,16 @@ If your team runs a [Snip Pick API](../api), set `snipPick.remote.url` to it —
 are a good place, so a project points at the company server automatically — then run
 **Snip Pick: Sign In to a Server…**.
 
+That setting wants the server's **base** URL, the one it is deployed at: `http://localhost:8787`,
+not `http://localhost:8787/v1`. The `/v1` form is the RFC 8707 resource identifier — the server
+prints it at startup next to the issuer, so it is an easy one to copy by mistake, and it fails
+with a bearer-token error rather than anything that mentions the URL. Discovery reads the
+server's metadata from the base and finds the resource for itself.
+
+To correct it, or to disconnect entirely, run **Snip Pick: Set Server URL…** — also the gear on
+the "Sign in to load remote vaults" row, and offered directly when a sign-in fails. Leaving the
+box empty clears the setting; local libraries are untouched either way.
+
 Signing in opens your browser, you authenticate against your own company's server, and it hands
 the editor back a token. The flow is **OAuth 2.1 with PKCE** against a public client: there is no
 API key to paste anywhere, and no long-lived secret in your settings. Tokens live in VS Code's
@@ -186,9 +199,17 @@ Once signed in, **Snip Pick: Select Vaults…** lists what you can reach:
 
 The ones you pick appear as extra roots in the tree, beside User and your workspace folders.
 
-> **Reading and writing remote vault contents is not implemented yet.** This release signs you in
-> and shows which vaults you have; a mounted vault currently renders a placeholder instead of its
-> items. Delta sync is the next piece of work.
+A mounted vault is a library like any other: the same JSON, the same editing, the same Quick
+Pick. It is cached on your machine and reconciled with the server — a sync pulls everything above
+the revision you last had and pushes whatever the server has not seen. Ordering comes from the
+vault's revision counter rather than from timestamps, because two editors on two machines cannot
+agree on what time it is.
+
+If someone else changed the same entry you did between syncs, that vault **stops syncing** and
+says so in the tree. Nothing is sent and nothing is overwritten until you run
+**Snip Pick: Resolve Vault Conflicts…** and say, per entry, which version to keep. Editing
+something the other side deleted counts too: there is no answer to that which does not throw away
+somebody's work, so you are asked rather than guessed at.
 
 If you use VS Code Insiders, Remote SSH, Codespaces or vscode.dev, the sign-in redirect comes back
 through a different URI than on desktop stable. The server ships with all of them registered, so
@@ -197,21 +218,23 @@ it should just work — if it does not, your administrator can add the URI to
 
 ## Settings
 
-| Setting                        | Default         | What it does                                                                                  |
-| ------------------------------ | --------------- | --------------------------------------------------------------------------------------------- |
-| `snipPick.showRelevantOnly`    | `false`         | Hide items whose context rules do not match the active file. Toggled from the view title bar. |
-| `snipPick.clickAction`         | `"insertOrRun"` | What clicking an item in the tree does: `insertOrRun`, `edit` or `none`.                      |
-| `snipPick.runBehavior`         | `"paste"`       | `paste` sends the command without Enter; `execute` runs it immediately.                       |
-| `snipPick.confirmDangerous`    | `true`          | Show a modal with the resolved command when it looks destructive.                             |
-| `snipPick.defaultScope`        | `"user"`        | Which level is pre-selected when creating items: `user` or `workspace`.                       |
-| `snipPick.discovery.enabled`   | `true`          | Show the read-only **Discovered** node.                                                       |
-| `snipPick.completions.enabled` | `true`          | Offer snippets that have a `prefix` as IntelliSense items.                                    |
+| Setting                        | Default         | What it does                                                                                         |
+| ------------------------------ | --------------- | ---------------------------------------------------------------------------------------------------- |
+| `snipPick.showRelevantOnly`    | `false`         | Hide items whose context rules do not match the active file. Toggled from the view title bar.        |
+| `snipPick.clickAction`         | `"insertOrRun"` | What clicking an item in the tree does: `insertOrRun`, `edit` or `none`.                             |
+| `snipPick.runBehavior`         | `"paste"`       | `paste` sends the command without Enter; `execute` runs it immediately.                              |
+| `snipPick.confirmDangerous`    | `true`          | Show a modal with the resolved command when it looks destructive.                                    |
+| `snipPick.defaultScope`        | `"user"`        | Which level is pre-selected when creating items: `user` or `workspace`.                              |
+| `snipPick.discovery.enabled`   | `true`          | Show the read-only **Discovered** node.                                                              |
+| `snipPick.completions.enabled` | `true`          | Offer snippets that have a `prefix` as IntelliSense items.                                           |
+| `snipPick.allowCrossScopeDrag` | `false`         | Allow dragging items from one scope to another. Off by default; drags inside a scope are unaffected. |
 
 ## Commands
 
 All of these are in the Command Palette under **Snip Pick**: Open…, Add Snippet, Add Snippet from
 Selection, Add Command, New Group, Toggle "Relevant Only", Refresh, Export…, Import…,
-Import .code-snippets…, Set Secret…, Clear Secrets…. Item- and group-specific actions (Insert, Run,
+Import .code-snippets…, Set Secret…, Clear Secrets…, Sign In to a Server…, Sign Out,
+Set Server URL…, Select Vaults…, Refresh Remote Vaults. Item- and group-specific actions (Insert, Run,
 Copy, Edit, Edit as JSON, Delete, Pin/Unpin, Duplicate, Move to Group…, Rename Group, Delete Group)
 live on the tree's context menus, where they have something to act on.
 
@@ -239,13 +262,20 @@ live on the tree's context menus, where they have something to act on.
 ```sh
 pnpm install
 pnpm run watch      # esbuild in watch mode
-# press F5 in VS Code to launch an Extension Development Host
 pnpm run lint
 pnpm run test:unit
 pnpm run test:coverage
 pnpm run test:integration
 pnpm run package    # produces a .vsix
 ```
+
+To try a change in a real editor, open the **repository root** in VS Code and press
+<kbd>F5</kbd>: that starts the watch task and an Extension Development Host running this working
+copy. The launch configurations live at the root, so opening this folder on its own will not find
+them. Reloading the host picks up a rebuild; a change to `package.json` needs it restarted. The
+full walkthrough — debugging, the integration-test launch configuration, keeping the host away
+from your real user library — is in the
+[root README](../../README.md#running-the-extension-in-vs-code).
 
 `pnpm run icon` regenerates `media/icon.png` from `media/icon.svg`.
 

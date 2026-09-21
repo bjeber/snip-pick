@@ -2,10 +2,13 @@ import * as vscode from 'vscode';
 import { SnipPickApiClient, normalizeBaseUrl } from '@snip-pick/api-client';
 import { vaultKey, type VaultSummary } from '@snip-pick/contracts';
 import { log } from '../log';
+import type { Store } from '../store/store';
+import { SyncEngine } from './syncEngine';
 import {
   AUTH_PROVIDER_ID,
   SCOPES,
   SnipPickAuthProvider,
+  promptForServerUrl,
   resolveServerUrl,
 } from '../auth/authProvider';
 
@@ -32,10 +35,14 @@ export class RemoteService implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
   private state: RemoteState = { vaults: [] };
 
+  readonly engine: SyncEngine;
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly provider: SnipPickAuthProvider,
+    private readonly store: Store,
   ) {
+    this.engine = new SyncEngine(context, store);
     this.disposables.push(
       this.emitter,
       vscode.authentication.onDidChangeSessions((event) => {
@@ -85,11 +92,13 @@ export class RemoteService implements vscode.Disposable {
   async refresh(): Promise<void> {
     const serverUrl = SnipPickAuthProvider.configuredServerUrl();
     if (!serverUrl) {
+      await this.unmountAll();
       this.set({ vaults: [] });
       return;
     }
     const session = await this.provider.sessionFor(normalize(serverUrl));
     if (!session) {
+      await this.unmountAll();
       this.set({ serverUrl: normalize(serverUrl), vaults: [] });
       return;
     }
@@ -101,6 +110,7 @@ export class RemoteService implements vscode.Disposable {
       const vaults = await client.vaults();
       this.set({ serverUrl: session.serverUrl, account: session.account.label, vaults });
       log().info(`Loaded ${vaults.length} remote vault(s) from ${session.serverUrl}`);
+      await this.mountAndSync(client, session.serverUrl);
     } catch (error) {
       const message = (error as Error).message;
       this.set({
@@ -113,6 +123,27 @@ export class RemoteService implements vscode.Disposable {
     }
   }
 
+  /**
+   * Makes the mounted vaults into scopes and brings them up to date.
+   *
+   * Mounting first, syncing second: the sync writes through the store, so the scope it writes to
+   * has to exist before the first delta arrives.
+   */
+  private async mountAndSync(client: SnipPickApiClient, serverUrl: string): Promise<void> {
+    const mounted = this.mounted();
+    const scopes = this.engine.scopesFor(serverUrl, mounted);
+    this.engine.retain(scopes.map((scope) => scope.id));
+    await this.store.setRemoteScopes(scopes);
+    await this.engine.syncAll(client, serverUrl, mounted);
+    this.emitter.fire();
+  }
+
+  /** Unmounts everything, for sign-out: a vault nobody is authenticated for is not a scope. */
+  private async unmountAll(): Promise<void> {
+    this.engine.retain([]);
+    await this.store.setRemoteScopes([]);
+  }
+
   private set(state: RemoteState): void {
     this.state = state;
     this.emitter.fire();
@@ -122,8 +153,51 @@ export class RemoteService implements vscode.Disposable {
   async signIn(): Promise<void> {
     const serverUrl = await resolveServerUrl();
     if (!serverUrl) return;
-    await vscode.authentication.getSession(AUTH_PROVIDER_ID, SCOPES, { createIfNone: true });
+    try {
+      await vscode.authentication.getSession(AUTH_PROVIDER_ID, SCOPES, { createIfNone: true });
+    } catch (error) {
+      // A wrong URL fails here, and the raw status is not a diagnosis — so the offer to correct
+      // it comes with the failure rather than leaving the URL to be hunted down in settings.
+      await this.offerToChangeServer(serverUrl, (error as Error).message);
+      return;
+    }
     await this.refresh();
+  }
+
+  private async offerToChangeServer(serverUrl: string, reason: string): Promise<void> {
+    log().error(`Sign-in to ${serverUrl} failed: ${reason}`);
+    const choice = await vscode.window.showErrorMessage(
+      `Snip Pick: could not sign in to ${serverUrl}.`,
+      { modal: true, detail: reason },
+      'Change Server…',
+    );
+    if (choice === 'Change Server…') await this.setServer();
+  }
+
+  /**
+   * Changes the configured server, or clears it.
+   *
+   * Separate from signing in because the two fail independently: a server that cannot be reached
+   * at all still has to be editable, and before this there was nowhere to do it from — the tree
+   * offered only "Sign in", which read the same broken URL every time.
+   */
+  async setServer(): Promise<void> {
+    const previous = SnipPickAuthProvider.configuredServerUrl();
+    const next = await promptForServerUrl();
+    if (next === previous) return;
+    this.set({ vaults: [] });
+    await this.refresh();
+    if (next) {
+      const choice = await vscode.window.showInformationMessage(
+        `Snip Pick: server set to ${next}.`,
+        'Sign In',
+      );
+      if (choice === 'Sign In') await this.signIn();
+    } else {
+      void vscode.window.showInformationMessage(
+        'Snip Pick: no server configured. Local libraries are unaffected.',
+      );
+    }
   }
 
   async signOut(): Promise<void> {
@@ -177,7 +251,7 @@ export class RemoteService implements vscode.Disposable {
       MOUNTED_KEY,
       picked.map((entry) => vaultKey(serverUrl, entry.vault.id)),
     );
-    this.emitter.fire();
+    await this.refresh();
   }
 }
 

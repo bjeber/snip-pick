@@ -7,8 +7,11 @@
  *
  * - `user` — follows the person across every project they open on this machine.
  * - `workspace` — lives in the project, under `.vscode/`, and is meant to be committed.
+ * - `remote` — a vault on a server, cached locally and synced. Same shape, same file format;
+ *   where the bytes live is the only difference, which is what lets one set of editing code
+ *   serve all three.
  */
-export type Scope = 'user' | 'workspace';
+export type Scope = 'user' | 'workspace' | 'remote';
 
 export type ItemType = 'snippet' | 'command';
 
@@ -28,6 +31,14 @@ export interface Group {
   name: string;
   parentId?: string;
   order: number;
+  /**
+   * Optional, unlike an item's.
+   *
+   * Groups predate sync and every `snippick.json` already written is without it, so a missing
+   * value has to keep meaning "as old as anything" rather than failing validation. Sync sets it;
+   * a hand-edited file need not.
+   */
+  updatedAt?: number;
 }
 
 export interface Item {

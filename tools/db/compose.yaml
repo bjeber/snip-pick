@@ -1,4 +1,13 @@
-# Postgres for local API development: `npm run db:up`.
+# Postgres for local API development. Driven by the scripts in this folder's package.json, and
+# from the repo root as `pnpm run db:up` / `db:down` / `db:reset` / `db:seed`.
+#
+# Needs Docker Desktop to be running; `docker compose` is the CLI it installs.
+
+# Pinned rather than taken from the directory name, which is what compose would otherwise use.
+# It names the volume too, so without this, moving this file would have stranded the data behind
+# `db_snippick-db` and started again from an empty `snip-pick_snippick-db`.
+name: snip-pick
+
 services:
   db:
     image: postgres:16-alpine

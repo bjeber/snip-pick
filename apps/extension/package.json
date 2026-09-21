@@ -240,6 +240,18 @@
         "icon": "$(sign-out)"
       },
       {
+        "command": "snipPick.resolveConflicts",
+        "title": "Resolve Vault Conflicts\u2026",
+        "category": "Snip Pick",
+        "icon": "$(warning)"
+      },
+      {
+        "command": "snipPick.setServerUrl",
+        "title": "Set Server URL\u2026",
+        "category": "Snip Pick",
+        "icon": "$(gear)"
+      },
+      {
         "command": "snipPick.selectVaults",
         "title": "Select Vaults\u2026",
         "category": "Snip Pick",
@@ -400,6 +412,11 @@
           "command": "snipPick.signOut",
           "when": "view == snipPick.library",
           "group": "3_remote@3"
+        },
+        {
+          "command": "snipPick.setServerUrl",
+          "when": "view == snipPick.library",
+          "group": "3_remote@4"
         }
       ],
       "view/item/context": [
@@ -490,7 +507,17 @@
         },
         {
           "command": "snipPick.selectVaults",
-          "when": "view == snipPick.library && viewItem == remoteVault",
+          "when": "view == snipPick.library && viewItem == remoteScopeRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "snipPick.setServerUrl",
+          "when": "view == snipPick.library && viewItem == signIn",
+          "group": "inline@1"
+        },
+        {
+          "command": "snipPick.resolveConflicts",
+          "when": "view == snipPick.library && viewItem == vaultConflicts",
           "group": "inline@1"
         }
       ]
@@ -505,6 +532,11 @@
     "configuration": {
       "title": "Snip Pick",
       "properties": {
+        "snipPick.allowCrossScopeDrag": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Allow dragging items from one scope to another — User to a workspace folder, or between folders. Off by default: the drop writes the item into a different `snippick.json`, and it is easy to do by accident while reordering. Use **Snip Pick: Export…** / **Import…** to move things deliberately."
+        },
         "snipPick.clickAction": {
           "type": "string",
           "enum": [

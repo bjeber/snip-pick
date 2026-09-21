@@ -16,6 +16,7 @@
     "auth:generate": "pnpm dlx @better-auth/cli@1.4.21 generate --config ../auth/src/auth.ts --output src/auth-schema.ts -y"
   },
   "dependencies": {
+    "@snip-pick/contracts": "workspace:*",
     "drizzle-orm": "catalog:",
     "pg": "catalog:"
   },

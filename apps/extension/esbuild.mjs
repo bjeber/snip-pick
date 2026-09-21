@@ -14,9 +14,9 @@ const TEST_DIR = 'test/integration';
 /**
  * Paths that must never appear in the extension's module graph.
  *
- * The lint rules in eslint.config.mjs reject the import; this rejects the artifact. It is the
+ * The lint rules in .oxlintrc.json reject the import; this rejects the artifact. It is the
  * stronger of the two, because it sees the graph esbuild actually walked: a server package
- * pulled in transitively, or past an eslint-disable, still lands here. Shipping a database
+ * pulled in transitively, or past an oxlint-disable, still lands here. Shipping a database
  * driver inside a VSIX is a supply-chain and size problem, not a style one.
  */
 export const SERVER_ONLY = [
@@ -49,7 +49,7 @@ const assertNoServerCode = {
         const text = [
           'Server code reached the extension bundle:',
           ...offenders.map((file) => `  ${file}`),
-          'Nothing was written. See SERVER_ONLY in eslint.config.mjs.',
+          'Nothing was written. See SERVER_ONLY in apps/extension/esbuild.mjs.',
         ].join('\n');
         // Printed here rather than left to esbuild: it does not log an onEnd plugin's errors,
         // and in watch mode there is no thrown object for the caller to print either.
