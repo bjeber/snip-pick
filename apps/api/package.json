@@ -14,14 +14,14 @@
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
-    "@better-auth/oauth-provider": "^1.7.5",
     "@hono/node-server": "^1.13.7",
+    "@snip-pick/auth": "*",
+    "@snip-pick/auth-verify": "*",
+    "@snip-pick/config": "*",
     "@snip-pick/contracts": "*",
     "@snip-pick/db": "*",
-    "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.8",
-    "jose": "^6.0.0"
+    "hono": "^4.13.8"
   },
   "devDependencies": {
     "tsx": "^4.19.2"

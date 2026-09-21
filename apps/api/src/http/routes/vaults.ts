@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { requireAccessToken, type AuthedEnv } from '../middleware';
+import type { AuthedEnv } from '@snip-pick/auth-verify';
+import { requireAccessToken } from '../../guard';
 import { listVaultsForUser } from '../../vaults/service';
 
 export const vaultRoutes = new Hono<AuthedEnv>()
