@@ -3,8 +3,13 @@ import { db, pool } from './client';
 
 /** Applies everything in drizzle/ and exits. Run it before starting the server. */
 async function main(): Promise<void> {
-  await migrate(db, { migrationsFolder: new URL('../../drizzle', import.meta.url).pathname });
-  await pool.end();
+  try {
+    await migrate(db, { migrationsFolder: new URL('../../drizzle', import.meta.url).pathname });
+  } finally {
+    // An open pool socket keeps the event loop alive, so a failed migration would hang instead
+    // of exiting with its non-zero code.
+    await pool.end();
+  }
 }
 
 main().then(

@@ -43,7 +43,9 @@ describe.skipIf(!CONFIGURED)('OAuth 2.1 authorization code flow', () => {
   }, 60_000);
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    // Guarded: when beforeAll fails (an unreachable database, say) these are still undefined,
+    // and an unguarded teardown replaces the real cause with a TypeError.
+    if (server) await new Promise<void>((resolve) => server.close(() => resolve()));
     await closePool?.();
   });
 

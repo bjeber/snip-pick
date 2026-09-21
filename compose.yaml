@@ -8,7 +8,9 @@ services:
       POSTGRES_PASSWORD: snippick
       POSTGRES_DB: snippick
     ports:
-      - '55432:5432'
+      # Bound to loopback: the credentials below are fixed and well known, so this must not be
+      # reachable from anything but this machine.
+      - '127.0.0.1:55432:5432'
     volumes:
       - snippick-db:/var/lib/postgresql/data
     healthcheck:

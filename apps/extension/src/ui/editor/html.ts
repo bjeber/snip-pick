@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import type * as vscode from 'vscode';
 import type { Item } from '@snip-pick/core';
 
@@ -6,13 +7,14 @@ export interface GroupOption {
   label: string;
 }
 
+/**
+ * The nonce is what authorizes every inline `<script>` and `<style>` in the webview, so it has to
+ * come from a cryptographic source — a predictable value gives the CSP away.
+ */
 function nonce(): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let text = '';
-  for (let i = 0; i < 32; i += 1) {
-    text += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-  }
-  return text;
+  // Hex rather than base64: 16 bytes is 128 bits of entropy — the CSP recommendation — and gives
+  // exactly 32 alphanumeric characters every time, with no stripping or rejection sampling.
+  return randomBytes(16).toString('hex');
 }
 
 /** Safe to embed inside a `<script>` block. */

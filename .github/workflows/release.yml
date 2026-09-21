@@ -17,6 +17,10 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # These jobs run repository code (npm ci, build scripts, tests). Without this the
+          # checkout token stays in .git/config where that code could read it.
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -27,21 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify the tag matches package.json
+      - name: Verify the tag matches the extension manifest
         run: |
+          # The root package.json is the private monorepo manifest and stays at 0.0.0; the
+          # version a v* tag refers to is the extension's.
           tag="${GITHUB_REF_NAME#v}"
-          version="$(node -p "require('./package.json').version")"
+          version="$(node -p "require('./apps/extension/package.json').version")"
           if [ "$tag" != "$version" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            echo "Tag $GITHUB_REF_NAME does not match the extension version $version" >&2
             exit 1
           fi
-          echo "VSIX=snip-pick-$version.vsix" >> "$GITHUB_ENV"
+          echo "VSIX=$PWD/snip-pick-$version.vsix" >> "$GITHUB_ENV"
 
       - name: Verify the build
         run: npm run check
 
       - name: Package
-        run: npx vsce package --out "$VSIX"
+        working-directory: apps/extension
+        run: npx vsce package --no-dependencies --out "$VSIX"
 
       - name: Create the GitHub release
         env:

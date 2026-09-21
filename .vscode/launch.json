@@ -15,7 +15,7 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/apps/extension",
-        "--extensionTestsPath=${workspaceFolder}/apps/extension/out/apps/extension/test/integration/index",
+        "--extensionTestsPath=${workspaceFolder}/apps/extension/out/test/integration/index",
         "${workspaceFolder}/apps/extension/test/fixtures/workspace"
       ],
       "outFiles": [

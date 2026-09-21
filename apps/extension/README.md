@@ -3,9 +3,10 @@
 Collect the snippets and shell commands you actually use, group them, and reach them in two
 keystrokes. Snip Pick knows which file you have open, so the things that matter here come first.
 
-<!-- TODO(bieber): record media/demo.gif (Quick Pick → insert snippet → paste command) and it will render here. -->
-
-![Snip Pick in action](media/demo.gif)
+<!-- TODO(bieber): record media/demo.gif (Quick Pick → insert snippet → paste command), then
+     uncomment the line below. Left commented so the Marketplace page does not show a broken
+     image in the meantime. -->
+<!-- ![Snip Pick in action](media/demo.gif) -->
 
 ## Features
 
@@ -183,7 +184,7 @@ Once signed in, **Snip Pick: Select Vaults…** lists what you can reach:
   mix;
 - **a project vault** for every team you belong to — shared with that team.
 
-The ones you pick appear as extra roots in the tree, beside Global and your workspace folders.
+The ones you pick appear as extra roots in the tree, beside User and your workspace folders.
 
 > **Reading and writing remote vault contents is not implemented yet.** This release signs you in
 > and shows which vaults you have; a mounted vault currently renders a placeholder instead of its
@@ -222,7 +223,7 @@ live on the tree's context menus, where they have something to act on.
   `dd if=`, fork bombs, `chmod -R 777`, writes to `/dev/sd*` and `sudo` trigger a modal showing the
   fully resolved command. Any item can also set `"confirm": true` to always ask.
 - **Workspace trust.** In an untrusted workspace, workspace items are read-only and no command can
-  be run. Global items still work.
+  be run. User-level items still work.
 - **Virtual workspaces.** Without a local folder there is no terminal to send to, so commands are
   copied to the clipboard instead.
 - **Secrets.** `{{secret:NAME}}` values go through VS Code's SecretStorage (the OS keychain). They

@@ -2,7 +2,7 @@ import { defineConfig } from '@vscode/test-cli';
 
 export default defineConfig({
   label: 'integration',
-  files: 'out/apps/extension/test/integration/**/*.test.js',
+  files: 'out/test/integration/**/*.test.js',
   version: 'stable',
   workspaceFolder: './test/fixtures/workspace',
   mocha: {

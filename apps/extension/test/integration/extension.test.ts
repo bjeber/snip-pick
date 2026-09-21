@@ -2,7 +2,6 @@ import * as assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 import type { SnipPickApi } from '../../src/extension';
 import type { Item } from '@snip-pick/core';
-import { USER_SCOPE_ID } from '../../src/store/store';
 
 const EXTENSION_ID = 'bieber.snip-pick';
 
@@ -54,12 +53,16 @@ function makeItem(overrides: Partial<Item> = {}): Item {
 
 suite('Snip Pick', () => {
   let api: SnipPickApi;
+  let USER_SCOPE_ID: string;
   const created: Array<{ scopeId: string; itemId: string }> = [];
 
   suiteSetup(async () => {
     const extension = vscode.extensions.getExtension<SnipPickApi>(EXTENSION_ID);
     assert.ok(extension, `${EXTENSION_ID} should be installed`);
     api = await extension.activate();
+    const user = api.store.scopes().find((scope) => scope.kind === 'user');
+    assert.ok(user, 'the extension should expose a user-level scope');
+    USER_SCOPE_ID = user.id;
   });
 
   teardown(async () => {
@@ -95,6 +98,7 @@ suite('Snip Pick', () => {
     const user = scopes.find((scope) => scope.id === USER_SCOPE_ID);
     assert.ok(user, 'there should be a user-level scope');
     assert.equal(user.kind, 'user');
+    assert.equal(user.id, 'user');
     assert.ok(
       !user.fileUri.path.includes('/.vscode/'),
       'the user library lives in global storage, not in any project',

