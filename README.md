@@ -51,6 +51,12 @@ pnpm run check          # lint, typecheck, unit tests, build — everything
 
 Linting and formatting are [oxlint](https://oxc.rs) and oxfmt; `pnpm run format` writes.
 
+Dependency versions live in one place. `pnpm-workspace.yaml` holds a
+[catalog](https://pnpm.io/catalogs) of every external range, and each `package.json` refers to it
+with `"drizzle-orm": "catalog:"` — so a bump is one line, and two packages cannot end up on
+different versions of something they both load. `catalogMode: strict` means `pnpm add` puts new
+dependencies there for you.
+
 Extension development: press <kbd>F5</kbd> (see [apps/extension/README.md](apps/extension/README.md)).
 
 API development:

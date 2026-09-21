@@ -14,16 +14,16 @@
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "catalog:",
     "@snip-pick/auth": "workspace:*",
     "@snip-pick/auth-verify": "workspace:*",
     "@snip-pick/config": "workspace:*",
     "@snip-pick/contracts": "workspace:*",
     "@snip-pick/db": "workspace:*",
-    "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.8"
+    "drizzle-orm": "catalog:",
+    "hono": "catalog:"
   },
   "devDependencies": {
-    "tsx": "^4.19.2"
+    "tsx": "catalog:"
   }
 }

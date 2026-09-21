@@ -16,11 +16,11 @@
     "auth:generate": "npx @better-auth/cli@latest generate --config ../auth/src/auth.ts --output src/auth-schema.ts -y"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
-    "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.10"
+    "@types/pg": "catalog:",
+    "drizzle-kit": "catalog:"
   }
 }

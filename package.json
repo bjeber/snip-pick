@@ -26,12 +26,12 @@
     "db:down": "docker compose down"
   },
   "devDependencies": {
-    "@types/node": "^20.17.6",
-    "@vitest/coverage-v8": "^2.1.4",
-    "oxfmt": "0.68.0",
-    "oxlint": "1.83.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.4"
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@12.5.1"
 }

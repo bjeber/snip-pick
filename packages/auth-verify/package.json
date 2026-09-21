@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "hono": "^4.13.8",
-    "jose": "^6.0.0"
+    "hono": "catalog:",
+    "jose": "catalog:"
   }
 }

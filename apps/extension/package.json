@@ -595,12 +595,12 @@
     "@snip-pick/api-client": "workspace:*",
     "@snip-pick/contracts": "workspace:*",
     "@snip-pick/core": "workspace:*",
-    "@types/mocha": "^10.0.9",
+    "@types/mocha": "catalog:",
     "@types/vscode": "^1.95.0",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.2.0",
-    "esbuild": "^0.24.0",
-    "ovsx": "^0.10.0"
+    "@vscode/test-cli": "catalog:",
+    "@vscode/test-electron": "catalog:",
+    "@vscode/vsce": "catalog:",
+    "esbuild": "catalog:",
+    "ovsx": "catalog:"
   }
 }
