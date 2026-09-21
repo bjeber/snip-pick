@@ -1,13 +1,14 @@
 /**
- * Everything both the VS Code extension and the API need to agree on.
+ * Snippet behaviour the editor needs: ranking, variable expansion, danger detection, merging,
+ * discovery and import.
  *
- * This package must stay free of `vscode` and of any server-only dependency: it is the shared
- * contract between the two, and the only reason its logic can be unit-tested without an editor
- * or a database. The lint config enforces the `vscode` half of that.
+ * The shapes this operates on live in `@snip-pick/contracts`; consumers import them from there
+ * rather than through this package, so a module's dependencies stay visible at its import site.
+ *
+ * This package must stay free of `vscode` and of any server-only dependency: it is what lets the
+ * logic be unit-tested without an editor. The lint config enforces both halves of that.
  */
 
-export * from './model/types';
-export * from './model/schema';
 export * from './model/normalize';
 export * from './model/jsonc';
 export * from './model/ids';
@@ -25,5 +26,3 @@ export * from './store/usage';
 export * from './discovery/parsers';
 
 export * from './importers/codeSnippets';
-
-export * from './api/contracts';

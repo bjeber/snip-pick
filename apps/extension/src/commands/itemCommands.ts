@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { newId, type Item } from '@snip-pick/core';
+import { newId } from '@snip-pick/core';
+import { type Item } from '@snip-pick/contracts';
 import type { ItemRef } from '../store/store';
 import { openItemEditor } from '../ui/editor/editorPanel';
 import type { Services } from './services';

@@ -3,7 +3,7 @@
  * translation rules can be unit-tested on their own.
  */
 import { parseJsonc } from '../model/jsonc';
-import type { Item } from '../model/types';
+import type { Item } from '@snip-pick/contracts';
 
 export interface ParsedSnippet {
   /** The key in the `.code-snippets` object, used as the item title. */

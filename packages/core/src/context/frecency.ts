@@ -1,4 +1,4 @@
-import type { UsageEntry } from '../model/types';
+import type { UsageEntry } from '@snip-pick/contracts';
 
 /** Usage counts lose half their weight every week. */
 export const HALF_LIFE_MS = 7 * 24 * 60 * 60 * 1000;

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { groupPath, type Item } from '@snip-pick/core';
+import { groupPath } from '@snip-pick/core';
+import { type Item } from '@snip-pick/contracts';
 import type { ItemRef, Store } from '../../store/store';
 import { renderEditorHtml } from './html';
 

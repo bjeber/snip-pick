@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { SnipPickApiClient, normalizeBaseUrl } from '@snip-pick/api-client';
-import { vaultKey, type VaultSummary } from '@snip-pick/core';
+import { vaultKey, type VaultSummary } from '@snip-pick/contracts';
 import { log } from '../log';
 import {
   AUTH_PROVIDER_ID,

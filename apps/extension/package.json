@@ -592,9 +592,10 @@
     "vscode:prepublish": "node esbuild.mjs --production"
   },
   "dependencies": {
+    "@snip-pick/api-client": "*",
+    "@snip-pick/contracts": "*",
     "@snip-pick/core": "*",
-    "minimatch": "^10.0.1",
-    "@snip-pick/api-client": "*"
+    "minimatch": "^10.0.1"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",

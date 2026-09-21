@@ -1,13 +1,7 @@
 import * as vscode from 'vscode';
 import type { ContextService } from '../../context/contextService';
-import {
-  bodyPreview,
-  commandText,
-  rankItems,
-  scoreRelevance,
-  type Group,
-  type Item,
-} from '@snip-pick/core';
+import { rankItems, scoreRelevance } from '@snip-pick/core';
+import { bodyPreview, commandText, type Group, type Item } from '@snip-pick/contracts';
 import type { DiscoveryService } from '../../discovery/discoveryService';
 import type { RemoteService } from '../../remote/remoteService';
 import type { ItemRef, ScopeInfo, Store } from '../../store/store';

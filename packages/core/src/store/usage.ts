@@ -1,4 +1,4 @@
-import type { Usage } from '../model/types';
+import type { Usage } from '@snip-pick/contracts';
 
 /** Records one use of `itemId`. Returns a new map; the input is not mutated. */
 export function recordUse(usage: Usage, itemId: string, now: number = Date.now()): Usage {

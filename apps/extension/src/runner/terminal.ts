@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { log } from '../log';
-import type { Cwd } from '@snip-pick/core';
+import type { Cwd } from '@snip-pick/contracts';
 
 const BASE_NAME = 'Snip Pick';
 

@@ -1,4 +1,4 @@
-import type { Item } from '@snip-pick/core';
+import type { Item } from '@snip-pick/contracts';
 
 let counter = 0;
 

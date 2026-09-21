@@ -18,12 +18,12 @@
   "dependencies": {
     "@better-auth/oauth-provider": "^1.7.5",
     "@hono/node-server": "^1.13.7",
-    "@snip-pick/core": "*",
+    "@snip-pick/contracts": "*",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.8",
-    "pg": "^8.23.0",
-    "jose": "^6.0.0"
+    "jose": "^6.0.0",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",

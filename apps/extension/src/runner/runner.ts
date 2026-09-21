@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import type { ContextService } from '../context/contextService';
-import { commandText, describeDanger, detectDangerous, type Item } from '@snip-pick/core';
+import { describeDanger, detectDangerous } from '@snip-pick/core';
+import { commandText, type Item } from '@snip-pick/contracts';
 import type { ItemRef, Store } from '../store/store';
 import type { UsageStore } from '../store/usageStore';
 import { insertSnippet } from './insert';
