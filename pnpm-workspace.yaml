@@ -48,7 +48,7 @@ catalog:
   hono: ^4.13.8
   jose: ^6.0.0
   minimatch: ^10.0.1
-  ovsx: ^0.10.0
+  ovsx: ^1.2.0
   oxfmt: 0.68.0 # exact: pre-1.0, and it formats every file in the repo
   oxlint: 1.83.0 # exact: a range here would change what CI rejects without a lockfile diff
   pg: ^8.23.0
