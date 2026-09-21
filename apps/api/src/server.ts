@@ -8,7 +8,7 @@ async function main(): Promise<void> {
   await seedVsCodeClient(db, config);
   serve({ fetch: createApp().fetch, port: config.port }, (info) => {
     process.stdout.write(`Snip Pick API listening on http://localhost:${info.port}\n`);
-    process.stdout.write(`  issuer:   ${config.baseUrl}\n`);
+    process.stdout.write(`  issuer:   ${config.issuer}\n`);
     process.stdout.write(`  resource: ${config.resource}\n`);
   });
 }

@@ -20,9 +20,10 @@ allowBuilds:
 # something they both load. drizzle-orm is in three manifests and hono in two, which is where
 # that drift would have started.
 #
-# catalogMode: strict keeps it that way: `pnpm add` in any package puts the new dependency here
-# and writes `catalog:` into that manifest, so nobody has to remember to, and no manifest ends up
-# carrying a version range of its own.
+# catalogMode: strict keeps it that way, in both directions. `pnpm add` of something this file
+# does not list adds it here and writes `catalog:` into that manifest, so nobody has to remember
+# to; `pnpm add` of a version that conflicts with an entry already here is refused outright. Either
+# way no manifest ends up carrying a version range of its own.
 #
 # One exception, deliberately not catalogued: @types/vscode in apps/extension. vsce reads that
 # range straight out of package.json to work out the minimum VS Code version an extension

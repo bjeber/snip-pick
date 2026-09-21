@@ -38,8 +38,9 @@ export interface KeySetReader {
 
 export function createKeySetReader(source: JwksSource): KeySetReader {
   let cached: KeySetCache | undefined;
+  let inFlight: Promise<KeySetCache> | undefined;
 
-  async function load(now: number): Promise<KeySetCache> {
+  async function fetchKeys(now: number): Promise<KeySetCache> {
     const jwks = await source();
     const ids = new Set(
       jwks.keys.map((key) => key.kid).filter((kid): kid is string => typeof kid === 'string'),
@@ -49,6 +50,22 @@ export function createKeySetReader(source: JwksSource): KeySetReader {
       ids,
       loadedAt: now,
     };
+  }
+
+  /**
+   * One load at a time.
+   *
+   * `cached` is only assigned once the await resolves, so without this every request arriving
+   * during a load sees the same cold or stale cache and starts its own — which is the stampede
+   * {@link RELOAD_INTERVAL_MS} exists to prevent, and the floor cannot stop it because no reload
+   * has finished to move `loadedAt`. A rejection clears the slot too, so a failed load does not
+   * wedge the reader.
+   */
+  function load(now: number): Promise<KeySetCache> {
+    inFlight ??= fetchKeys(now).finally(() => {
+      inFlight = undefined;
+    });
+    return inFlight;
   }
 
   return {
@@ -66,6 +83,7 @@ export function createKeySetReader(source: JwksSource): KeySetReader {
     },
     reset() {
       cached = undefined;
+      inFlight = undefined;
     },
   };
 }

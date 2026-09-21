@@ -19,9 +19,7 @@ export function createApp(): Hono {
     }),
   );
 
-  app.get('/health', (c) =>
-    c.json({ ok: true, issuer: config.baseUrl, resource: config.resource }),
-  );
+  app.get('/health', (c) => c.json({ ok: true, issuer: config.issuer, resource: config.resource }));
 
   /**
    * RFC 8414 requires the metadata document at the origin root, which `basePath` would otherwise

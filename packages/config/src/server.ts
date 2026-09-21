@@ -19,11 +19,6 @@ function required(source: EnvSource, name: string): string {
   return value;
 }
 
-function optional(source: EnvSource, name: string, fallback: string): string {
-  const value = source[name];
-  return value && value.length > 0 ? value : fallback;
-}
-
 function list(source: EnvSource, name: string, fallback: string[]): string[] {
   const value = source[name];
   if (!value) return fallback;
@@ -41,11 +36,18 @@ function flag(source: EnvSource, name: string, fallback = false): boolean {
 }
 
 /**
- * Absolute http(s) origin, or `undefined`.
+ * Absolute http(s) base URL, or `undefined`.
  *
  * `BASE_URL` is a name other tools claim — Vite, for one, sets it to `"/"` — and a relative value
  * silently becomes an empty issuer, which every token then fails to verify against. Anything that
  * is not an absolute URL is ignored rather than trusted.
+ *
+ * The resource and issuer are built by appending to this, so anything that cannot be appended to
+ * is rejected as well: `https://host?x=1` would otherwise yield the resource
+ * `https://host?x=1/v1`, and every token would be minted for an audience no client can name.
+ *
+ * A path is allowed and kept. A deployment behind a reverse proxy at `https://host/snippick` is
+ * a real arrangement, and `https://host/snippick/v1` is the right answer for it.
  */
 function absoluteUrl(source: EnvSource, ...names: string[]): string | undefined {
   for (const name of names) {
@@ -53,14 +55,30 @@ function absoluteUrl(source: EnvSource, ...names: string[]): string | undefined 
     if (!value) continue;
     try {
       const url = new URL(value);
-      if (url.protocol === 'http:' || url.protocol === 'https:') {
-        return value.replace(/\/+$/, '');
-      }
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
+      if (url.search || url.hash || url.username || url.password) continue;
+      return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
     } catch {
       // Not a URL at all; fall through to the next candidate.
     }
   }
   return undefined;
+}
+
+/**
+ * TCP port, validated here rather than deep inside `serve()`.
+ *
+ * 0 is allowed and means "any free port": the API's own test binds that way to avoid colliding
+ * with whatever else is running.
+ */
+function port(source: EnvSource, name: string, fallback: number): number {
+  const raw = source[name];
+  if (raw === undefined || raw.length === 0) return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 65535) {
+    throw new Error(`${name} must be an integer between 0 and 65535, not ${JSON.stringify(raw)}.`);
+  }
+  return value;
 }
 
 /** better-auth mounts at this path, and the OAuth issuer is the base URL *plus* that path. */
@@ -98,7 +116,7 @@ export function loadServerConfig(source: EnvSource = process.env): ServerConfig 
     databaseUrl: required(source, 'DATABASE_URL'),
     authSecret: required(source, 'BETTER_AUTH_SECRET'),
     baseUrl,
-    port: Number(optional(source, 'PORT', '8787')),
+    port: port(source, 'PORT', 8787),
     resource: `${baseUrl}/v1`,
     issuer: `${baseUrl}${AUTH_BASE_PATH}`,
     vscodeRedirectUris: list(source, 'VSCODE_REDIRECT_URIS', [

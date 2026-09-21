@@ -54,8 +54,9 @@ Linting and formatting are [oxlint](https://oxc.rs) and oxfmt; `pnpm run format`
 Dependency versions live in one place. `pnpm-workspace.yaml` holds a
 [catalog](https://pnpm.io/catalogs) of every external range, and each `package.json` refers to it
 with `"drizzle-orm": "catalog:"` — so a bump is one line, and two packages cannot end up on
-different versions of something they both load. `catalogMode: strict` means `pnpm add` puts new
-dependencies there for you.
+different versions of something they both load. `catalogMode: strict` keeps it honest both ways: `pnpm add`
+puts a dependency the catalog does not have into it for you, and refuses a version that conflicts
+with one it already has.
 
 Extension development: press <kbd>F5</kbd> (see [apps/extension/README.md](apps/extension/README.md)).
 

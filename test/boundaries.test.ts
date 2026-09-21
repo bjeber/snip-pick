@@ -15,7 +15,24 @@ import { serverCodeIn } from '../apps/extension/esbuild.mjs';
  * source root and checks what comes back.
  */
 
-const BANS = ['vscode', 'pg', 'node:crypto', '@snip-pick/db'] as const;
+/**
+ * Every import the boundary is supposed to reject, including the deep subpaths.
+ *
+ * The subpaths are the point. oxlint matches a `group` gitignore-style, so `drizzle-orm/*` covers
+ * `drizzle-orm/node-postgres` but not `drizzle-orm/node-postgres/migrator`, and no `node:` glob
+ * covers `node:fs/promises`. An earlier version of this test probed only the bare specifiers and
+ * passed while both holes were wide open.
+ */
+const BANS = [
+  'vscode',
+  'pg',
+  'node:crypto',
+  'node:fs/promises',
+  '@snip-pick/db',
+  'drizzle-orm/node-postgres/migrator',
+  'better-auth/adapters/drizzle',
+  'hono/cors',
+] as const;
 type Ban = (typeof BANS)[number];
 
 /** A file importing one of everything the boundary cares about. */
@@ -23,19 +40,37 @@ const PROBE = [
   "import * as vscode from 'vscode';",
   "import pg from 'pg';",
   "import { randomUUID } from 'node:crypto';",
+  "import { readFile } from 'node:fs/promises';",
   "import { createDb } from '@snip-pick/db';",
-  'export const probe = [vscode, pg, randomUUID, createDb];',
+  "import { migrate } from 'drizzle-orm/node-postgres/migrator';",
+  "import { drizzleAdapter } from 'better-auth/adapters/drizzle';",
+  "import { cors } from 'hono/cors';",
+  "import { SnipPickApiClient } from '@snip-pick/api-client';",
+  'export const probe = [vscode, pg, randomUUID, readFile, createDb];',
+  'export const more = [migrate, drizzleAdapter, cors, SnipPickApiClient];',
 ].join('\n');
+
+/** Server packages and their subpaths, rejected everywhere the extension can reach. */
+const SERVER: Ban[] = [
+  'pg',
+  '@snip-pick/db',
+  'drizzle-orm/node-postgres/migrator',
+  'better-auth/adapters/drizzle',
+  'hono/cors',
+];
+
+/** Node built-ins, bare and subpath. */
+const NODE: Ban[] = ['node:crypto', 'node:fs/promises'];
 
 const EXPECTED: Record<string, Ban[]> = {
   // The extension is the one place the editor API is allowed, and the one place server code
   // would actually be shipped to a user.
-  'apps/extension/src': ['pg', '@snip-pick/db'],
+  'apps/extension/src': SERVER,
   // Isomorphic: no editor, no server, no platform at all.
-  'packages/contracts/src': ['vscode', 'pg', 'node:crypto', '@snip-pick/db'],
-  'packages/core/src': ['vscode', 'pg', 'node:crypto', '@snip-pick/db'],
+  'packages/contracts/src': ['vscode', ...SERVER, ...NODE],
+  'packages/core/src': ['vscode', ...SERVER, ...NODE],
   // Talks to the server over HTTP; does not link against it. node: builtins are fine here.
-  'packages/api-client/src': ['vscode', 'pg', '@snip-pick/db'],
+  'packages/api-client/src': ['vscode', ...SERVER],
   // Server side: the only thing off-limits is the editor API.
   'packages/config/src': ['vscode'],
   'packages/db/src': ['vscode'],

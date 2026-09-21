@@ -13,7 +13,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:generate": "drizzle-kit generate",
-    "auth:generate": "npx @better-auth/cli@latest generate --config ../auth/src/auth.ts --output src/auth-schema.ts -y"
+    "auth:generate": "pnpm dlx @better-auth/cli@1.4.21 generate --config ../auth/src/auth.ts --output src/auth-schema.ts -y"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

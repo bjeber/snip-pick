@@ -62,6 +62,9 @@
     {
       // ...and the extension must not reach for the server. It legitimately imports vscode, so
       // this is the one place the editor API is allowed.
+      //
+      // The `/**` suffixes matter: a bare `drizzle-orm/*` matches `drizzle-orm/node-postgres` but
+      // not `drizzle-orm/node-postgres/migrator`, which is a path this repo really imports.
       "files": ["apps/extension/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
@@ -76,14 +79,14 @@
                   "@snip-pick/db",
                   "@snip-pick/api",
                   "better-auth",
-                  "better-auth/*",
-                  "@better-auth/*",
+                  "better-auth/**",
+                  "@better-auth/**",
                   "drizzle-orm",
-                  "drizzle-orm/*",
+                  "drizzle-orm/**",
                   "drizzle-kit",
                   "pg",
                   "hono",
-                  "hono/*"
+                  "hono/**"
                 ],
                 "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
               }
@@ -114,14 +117,14 @@
                   "@snip-pick/db",
                   "@snip-pick/api",
                   "better-auth",
-                  "better-auth/*",
-                  "@better-auth/*",
+                  "better-auth/**",
+                  "@better-auth/**",
                   "drizzle-orm",
-                  "drizzle-orm/*",
+                  "drizzle-orm/**",
                   "drizzle-kit",
                   "pg",
                   "hono",
-                  "hono/*"
+                  "hono/**"
                 ],
                 "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
               }
@@ -133,6 +136,10 @@
     {
       // The isomorphic packages carry no platform at all, so they stay usable from a web extension
       // host. packages/core/src/platform.d.ts is the one place that names a global.
+      //
+      // `regex` rather than a group for node: oxlint matches groups gitignore-style, so `*` stops
+      // at a `/` and only `**` spans segments. `node:` is a protocol rather than a path, and
+      // neither `node:*` nor `node:**` matches `node:fs/promises`. Only the regex does.
       "files": ["packages/contracts/**/*.ts", "packages/core/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
@@ -153,19 +160,19 @@
                   "@snip-pick/db",
                   "@snip-pick/api",
                   "better-auth",
-                  "better-auth/*",
-                  "@better-auth/*",
+                  "better-auth/**",
+                  "@better-auth/**",
                   "drizzle-orm",
-                  "drizzle-orm/*",
+                  "drizzle-orm/**",
                   "drizzle-kit",
                   "pg",
                   "hono",
-                  "hono/*"
+                  "hono/**"
                 ],
                 "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
               },
               {
-                "group": ["node:*"],
+                "regex": "^node:",
                 "message": "This package must run in a web extension host too. Use a platform-neutral API."
               }
             ]
