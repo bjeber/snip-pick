@@ -1,14 +1,14 @@
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { db, pool } from './client';
+import { runMigrations } from '@snip-pick/db';
+import { closeDb, db } from './db';
 
-/** Applies everything in drizzle/ and exits. Run it before starting the server. */
+/** Applies everything in the db package's drizzle/ folder and exits. Run it before the server. */
 async function main(): Promise<void> {
   try {
-    await migrate(db, { migrationsFolder: new URL('../../drizzle', import.meta.url).pathname });
+    await runMigrations(db);
   } finally {
     // An open pool socket keeps the event loop alive, so a failed migration would hang instead
     // of exiting with its non-zero code.
-    await pool.end();
+    await closeDb();
   }
 }
 

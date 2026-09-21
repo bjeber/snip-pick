@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { oauthClient, oauthClientResource } from './db/auth-schema';
-import { db } from './db/client';
+import { oauthClient, oauthClientResource } from '@snip-pick/db';
+import { db } from './db';
 import { VSCODE_CLIENT_ID } from '@snip-pick/config';
 import { config } from './config';
 

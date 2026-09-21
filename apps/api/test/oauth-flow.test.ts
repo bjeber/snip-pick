@@ -30,7 +30,7 @@ describe.skipIf(!CONFIGURED)('OAuth 2.1 authorization code flow', () => {
     const { serve } = await import('@hono/node-server');
     const { createApp } = await import('../src/http/app');
     const { seedVsCodeClient } = await import('../src/bootstrap');
-    const { pool } = await import('../src/db/client');
+    const { pool } = await import('../src/db');
     closePool = () => pool.end();
 
     await seedVsCodeClient();

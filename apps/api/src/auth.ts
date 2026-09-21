@@ -2,7 +2,8 @@ import { oauthProvider } from '@better-auth/oauth-provider';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { jwt, organization } from 'better-auth/plugins';
-import { db, schema } from './db/client';
+import { schema } from '@snip-pick/db';
+import { db } from './db';
 import { config } from './config';
 
 /**

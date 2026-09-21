@@ -1,0 +1,26 @@
+{
+  "name": "@snip-pick/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Postgres schema, drizzle client factory and migrations. Server-only.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "auth:generate": "npx @better-auth/cli@latest generate --config ../../apps/api/src/auth.ts --output src/auth-schema.ts -y"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.10"
+  }
+}
