@@ -17,6 +17,7 @@ export default defineConfig({
         'src/runner/danger.ts',
         'src/discovery/parsers.ts',
         'src/importers/**',
+        'src/ui/editor/html.ts',
       ],
     },
   },

@@ -73,6 +73,90 @@ describe('parseFile', () => {
     expect(typeof result.file.items[0]?.createdAt).toBe('number');
     expect(result.file.items[0]?.updatedAt).toBe(result.file.items[0]?.createdAt);
   });
+
+  it('rejects non-object roots and non-array collections', () => {
+    expect(validateFile('nope').ok).toBe(false);
+    expect(validateFile([]).ok).toBe(false);
+    const result = validateFile({ schemaVersion: 1, groups: {}, items: {} });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain('groups must be an array');
+      expect(result.errors).toContain('items must be an array');
+    }
+  });
+
+  it('reports malformed groups and items', () => {
+    const result = validateFile({
+      schemaVersion: 1,
+      groups: ['not an object', { id: 'g', name: 'G', order: 'soon', parentId: 5 }],
+      items: ['not an object'],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain('groups[0] must be an object');
+      expect(result.errors).toContain('groups[1].order must be a number');
+      expect(result.errors).toContain('groups[1].parentId must be a string');
+      expect(result.errors).toContain('items[0] must be an object');
+    }
+  });
+
+  it('rejects bad optional item fields', () => {
+    const base = { id: 'i', type: 'command', title: 'T', body: 'b', createdAt: 1, updatedAt: 1 };
+    const result = validateFile({
+      schemaVersion: 1,
+      groups: [],
+      items: [
+        { ...base, cwd: 'elsewhere', confirm: 'yes', pinned: 'no', steps: [1], context: 'wide' },
+      ],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain('items[0].cwd must be one of workspace, fileDir');
+      expect(result.errors).toContain('items[0].confirm must be a boolean');
+      expect(result.errors).toContain('items[0].pinned must be a boolean');
+      expect(result.errors).toContain('items[0].steps must be an array of strings');
+      expect(result.errors).toContain('items[0].context must be an object');
+    }
+  });
+
+  it('keeps every part of a fully specified item', () => {
+    const result = validateFile({
+      schemaVersion: 1,
+      groups: [{ id: 'g', name: 'G', order: 1, parentId: 'p' }],
+      items: [
+        {
+          id: 'i',
+          type: 'command',
+          title: 'T',
+          body: 'b',
+          description: 'd',
+          prefix: 'p',
+          groupId: 'g',
+          tags: ['t'],
+          context: { languages: ['ts'], globs: ['**/*.ts'], markers: ['package.json'] },
+          cwd: 'fileDir',
+          confirm: true,
+          steps: ['one', 'two'],
+          pinned: true,
+          createdAt: 1,
+          updatedAt: 2,
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.file.items[0]).toMatchObject({
+        description: 'd',
+        prefix: 'p',
+        groupId: 'g',
+        cwd: 'fileDir',
+        confirm: true,
+        steps: ['one', 'two'],
+        pinned: true,
+      });
+      expect(result.file.groups[0]?.parentId).toBe('p');
+    }
+  });
 });
 
 describe('migrate', () => {

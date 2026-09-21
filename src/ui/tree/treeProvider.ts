@@ -89,7 +89,18 @@ export class LibraryTreeProvider
   }
 
   private rootNodes(): TreeNode[] {
+    // An empty tree lets the view's welcome content ("Add Snippet" / "Add Command") show through.
+    if (this.isLibraryEmpty()) return [];
     return this.store.scopes().map((scope) => ({ kind: 'scope', scopeId: scope.id }) as TreeNode);
+  }
+
+  private isLibraryEmpty(): boolean {
+    if (!this.store.isEmpty()) return false;
+    if (this.store.scopes().some((scope) => this.store.errorFor(scope.id))) return false;
+    if (!this.discovery.enabled) return true;
+    return (vscode.workspace.workspaceFolders ?? []).every(
+      (folder) => this.discovery.groupsFor(folder).length === 0,
+    );
   }
 
   private scopeChildren(scopeId: string): TreeNode[] {

@@ -33,6 +33,10 @@ const STYLES = `
   form { display: grid; gap: 0.9rem; max-width: 46rem; }
   .row { display: grid; gap: 0.3rem; }
   .row-inline { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  .grow-sm { flex: 1 1 12rem; }
+  .grow-md { flex: 1 1 16rem; }
+  .checkbox { width: auto; }
+  .plain { font-weight: 400; }
   label { font-weight: 600; }
   .hint { color: var(--vscode-descriptionForeground); font-weight: 400; font-size: 0.9em; }
   input[type='text'], select, textarea {
@@ -191,14 +195,14 @@ export function renderEditorHtml(
   </div>
 
   <div class="row-inline">
-    <div class="row" style="flex:1 1 12rem">
+    <div class="row grow-sm">
       <label for="type">Type</label>
       <select id="type" name="type">
         <option value="snippet">Snippet</option>
         <option value="command">Shell command</option>
       </select>
     </div>
-    <div class="row" style="flex:1 1 16rem">
+    <div class="row grow-md">
       <label for="groupId">Group</label>
       <select id="groupId" name="groupId"></select>
     </div>
@@ -220,11 +224,11 @@ export function renderEditorHtml(
   </div>
 
   <div class="row-inline">
-    <div class="row" style="flex:1 1 16rem">
+    <div class="row grow-md">
       <label for="tags">Tags <span class="hint">comma separated</span></label>
       <input type="text" id="tags" name="tags" />
     </div>
-    <div class="row" style="flex:1 1 12rem" data-when="snippet">
+    <div class="row grow-sm" data-when="snippet">
       <label for="prefix">Prefix <span class="hint">IntelliSense trigger</span></label>
       <input type="text" id="prefix" name="prefix" />
     </div>
@@ -256,8 +260,8 @@ export function renderEditorHtml(
       </select>
     </div>
     <div class="row-inline">
-      <input type="checkbox" id="confirm" name="confirm" style="width:auto" />
-      <label for="confirm" style="font-weight:400">Always ask before running</label>
+      <input type="checkbox" id="confirm" name="confirm" class="checkbox" />
+      <label for="confirm" class="plain">Always ask before running</label>
     </div>
   </fieldset>
 

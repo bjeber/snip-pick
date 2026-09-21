@@ -187,6 +187,7 @@ npm run watch      # esbuild in watch mode
 # press F5 in VS Code to launch an Extension Development Host
 npm run lint
 npm run test:unit
+npm run test:coverage
 npm run test:integration
 npm run package    # produces a .vsix
 ```

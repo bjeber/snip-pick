@@ -45,16 +45,20 @@ export function registerViewCommands(services: Services): vscode.Disposable[] {
       });
     }),
 
-    vscode.commands.registerCommand('snipPick.toggleRelevantOnly', async () => {
-      const configuration = vscode.workspace.getConfiguration('snipPick');
-      const next = !configuration.get<boolean>('showRelevantOnly', false);
-      const target = vscode.workspace.workspaceFolders
-        ? vscode.ConfigurationTarget.Workspace
-        : vscode.ConfigurationTarget.Global;
-      await configuration.update('showRelevantOnly', next, target);
-      syncRelevantOnlyContext();
-      tree.refresh();
-    }),
+    // Two commands share one handler so the title bar can show a filled filter icon while the
+    // filter is on; only the first is offered in the Command Palette.
+    ...['snipPick.toggleRelevantOnly', 'snipPick.showAllItems'].map((id) =>
+      vscode.commands.registerCommand(id, async () => {
+        const configuration = vscode.workspace.getConfiguration('snipPick');
+        const next = !configuration.get<boolean>('showRelevantOnly', false);
+        const target = vscode.workspace.workspaceFolders
+          ? vscode.ConfigurationTarget.Workspace
+          : vscode.ConfigurationTarget.Global;
+        await configuration.update('showRelevantOnly', next, target);
+        syncRelevantOnlyContext();
+        tree.refresh();
+      }),
+    ),
 
     vscode.commands.registerCommand('snipPick.refresh', async () => {
       await guard(async () => {

@@ -175,6 +175,12 @@
         "icon": "$(filter)"
       },
       {
+        "command": "snipPick.showAllItems",
+        "title": "Show All Items",
+        "category": "Snip Pick",
+        "icon": "$(filter-filled)"
+      },
+      {
         "command": "snipPick.refresh",
         "title": "Refresh",
         "category": "Snip Pick",
@@ -283,6 +289,10 @@
         {
           "command": "snipPick.addSnippetFromSelection",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "snipPick.showAllItems",
+          "when": "false"
         }
       ],
       "editor/context": [
@@ -315,7 +325,12 @@
         },
         {
           "command": "snipPick.toggleRelevantOnly",
-          "when": "view == snipPick.library",
+          "when": "view == snipPick.library && !snipPick.relevantOnly",
+          "group": "navigation@5"
+        },
+        {
+          "command": "snipPick.showAllItems",
+          "when": "view == snipPick.library && snipPick.relevantOnly",
           "group": "navigation@5"
         },
         {
@@ -520,7 +535,8 @@
     "package": "npm run check && vsce package",
     "check": "npm run lint && npm run typecheck && npm run test:unit && npm run compile",
     "vscode:prepublish": "node esbuild.mjs --production",
-    "icon": "node scripts/render-icon.mjs"
+    "icon": "node scripts/render-icon.mjs",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "minimatch": "^10.0.1"
@@ -530,6 +546,7 @@
     "@types/mocha": "^10.0.9",
     "@types/node": "^20.17.6",
     "@types/vscode": "^1.95.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.0",
