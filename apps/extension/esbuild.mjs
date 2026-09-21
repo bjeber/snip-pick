@@ -1,5 +1,7 @@
 import { build, context } from 'esbuild';
 import { readdirSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import process from 'node:process';
 
 const production = process.argv.includes('--production');
@@ -7,6 +9,56 @@ const watch = process.argv.includes('--watch');
 const tests = process.argv.includes('--tests');
 
 const TEST_DIR = 'test/integration';
+
+/**
+ * Paths that must never appear in the extension's module graph.
+ *
+ * The lint rules in eslint.config.mjs reject the import; this rejects the artifact. It is the
+ * stronger of the two, because it sees the graph esbuild actually walked: a server package
+ * pulled in transitively, or past an eslint-disable, still lands here. Shipping a database
+ * driver inside a VSIX is a supply-chain and size problem, not a style one.
+ */
+const SERVER_ONLY = [
+  /(^|\/)packages\/(db|auth|auth-verify|config)\//,
+  /(^|\/)apps\/api\//,
+  /node_modules\/(pg|pg-[^/]+|drizzle-orm|drizzle-kit|better-auth|@better-auth|hono)\//,
+];
+
+/**
+ * Checks the graph, then writes the output itself.
+ *
+ * The build runs with `write: false` so that esbuild hands the bytes over instead of putting them
+ * on disk. A rejected graph therefore leaves no artifact behind at all — otherwise a failed build
+ * would still drop a dist/extension.js carrying the very code this rejects, ready for a later
+ * `vsce package` to pick up. Writing from onEnd covers watch mode too.
+ *
+ * @type {import('esbuild').Plugin}
+ */
+const assertNoServerCode = {
+  name: 'assert-no-server-code',
+  setup(build) {
+    build.onEnd(async (result) => {
+      const inputs = Object.keys(result.metafile?.inputs ?? {});
+      const offenders = inputs.filter((file) => SERVER_ONLY.some((pattern) => pattern.test(file)));
+      if (offenders.length > 0) {
+        const text = [
+          'Server code reached the extension bundle:',
+          ...offenders.map((file) => `  ${file}`),
+          'Nothing was written. See SERVER_ONLY in eslint.config.mjs.',
+        ].join('\n');
+        // Printed here rather than left to esbuild: it does not log an onEnd plugin's errors,
+        // and in watch mode there is no thrown object for the caller to print either.
+        process.stderr.write(`\n\u2716 [assert-no-server-code] ${text}\n\n`);
+        return { errors: [{ text }] };
+      }
+      for (const file of result.outputFiles ?? []) {
+        await mkdir(dirname(file.path), { recursive: true });
+        await writeFile(file.path, file.contents);
+      }
+      return null;
+    });
+  },
+};
 
 /** @type {import('esbuild').BuildOptions} */
 const extension = {
@@ -20,6 +72,10 @@ const extension = {
   sourcemap: !production,
   minify: production,
   logLevel: 'info',
+  metafile: true,
+  // The plugin writes; see its comment.
+  write: false,
+  plugins: [assertNoServerCode],
 };
 
 /**
@@ -47,6 +103,9 @@ const integrationTests = {
   external: ['vscode', 'mocha'],
   sourcemap: true,
   logLevel: 'info',
+  metafile: true,
+  write: false,
+  plugins: [assertNoServerCode],
 };
 
 const options = tests ? integrationTests : extension;
@@ -55,5 +114,11 @@ if (watch) {
   const ctx = await context(options);
   await ctx.watch();
 } else {
-  await build(options);
+  try {
+    await build(options);
+  } catch {
+    // Diagnostics are already on stderr — esbuild's own, and the plugin's. A stack trace here
+    // would only point back into esbuild, which tells nobody anything.
+    process.exit(1);
+  }
 }
