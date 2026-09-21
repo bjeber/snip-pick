@@ -9,3 +9,6 @@ coverage/
 .env.*
 !.env.example
 apps/extension/test/fixtures/workspace/.vscode/snippick.json
+
+# Scratch files the boundary test drops into each source root.
+__boundary__/

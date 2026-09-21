@@ -6,6 +6,7 @@ export default defineConfig({
       'packages/*/test/**/*.test.ts',
       'apps/extension/test/unit/**/*.test.ts',
       'apps/api/test/**/*.test.ts',
+      'test/**/*.test.ts',
     ],
     environment: 'node',
     coverage: {
