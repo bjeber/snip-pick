@@ -36,6 +36,12 @@ export interface KeySetReader {
   reset(): void;
 }
 
+/**
+ * Caches the JWK set from `source`, reloading when a token presents a `kid` it has not seen.
+ *
+ * One reader per process: the cache and the in-flight guard below are its state, so a second
+ * reader would reload independently and halve the benefit of both.
+ */
 export function createKeySetReader(source: JwksSource): KeySetReader {
   let cached: KeySetCache | undefined;
   let inFlight: Promise<KeySetCache> | undefined;
