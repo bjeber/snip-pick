@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in Snip Pick does not work the way it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Please fill in as much as you can —
+        the version numbers below are what make a bug reproducible.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Snip Pick version
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: vscode-version
+    attributes:
+      label: VS Code version
+      description: Help → About (or `code --version`)
+      placeholder: 1.95.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.1 / Windows 11 / Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: input
+    id: shell
+    attributes:
+      label: Shell
+      description: Only relevant for command items.
+      placeholder: zsh / bash / PowerShell 7.4 / cmd.exe
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output from the "Snip Pick" output channel
+      description: View → Output → Snip Pick. This is rendered as a code block automatically.
+      render: shell

@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/bjeber/snip-pick/schemas/snippick.schema.json",
+  "title": "Snip Pick library",
+  "description": "Snippets, shell commands and groups managed by the Snip Pick extension.",
+  "type": "object",
+  "required": ["schemaVersion", "groups", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Version of this file format."
+    },
+    "groups": {
+      "type": "array",
+      "description": "Groups, optionally nested via parentId.",
+      "items": { "$ref": "#/definitions/group" }
+    },
+    "items": {
+      "type": "array",
+      "description": "Snippets and shell commands.",
+      "items": { "$ref": "#/definitions/item" }
+    }
+  },
+  "definitions": {
+    "group": {
+      "type": "object",
+      "required": ["id", "name", "order"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "parentId": { "type": "string", "minLength": 1, "description": "Id of the parent group." },
+        "order": { "type": "number", "description": "Sort order among siblings." }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "type", "title", "body", "tags", "createdAt", "updatedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "enum": ["snippet", "command"] },
+        "title": { "type": "string", "minLength": 1 },
+        "body": {
+          "type": "string",
+          "description": "Snippet body (VS Code snippet syntax) or shell command."
+        },
+        "description": { "type": "string" },
+        "prefix": {
+          "type": "string",
+          "description": "Snippets only: IntelliSense trigger word."
+        },
+        "groupId": { "type": "string", "minLength": 1 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "context": { "$ref": "#/definitions/context" },
+        "cwd": {
+          "type": "string",
+          "enum": ["workspace", "fileDir"],
+          "default": "workspace",
+          "description": "Commands only: working directory for the terminal."
+        },
+        "confirm": {
+          "type": "boolean",
+          "description": "Commands only: always ask before running."
+        },
+        "steps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Commands only: a chain of commands. When set, body is ignored."
+        },
+        "pinned": { "type": "boolean" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Optional rules that decide when this item is relevant.",
+      "additionalProperties": false,
+      "properties": {
+        "languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "VS Code language ids, e.g. \"typescript\"."
+        },
+        "globs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns matched against the workspace-relative path, e.g. \"**/*.test.ts\"."
+        },
+        "markers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Files at the workspace folder root, e.g. \"package.json\"."
+        }
+      }
+    }
+  }
+}

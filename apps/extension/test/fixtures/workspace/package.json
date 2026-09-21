@@ -1,0 +1,8 @@
+{
+  "name": "snip-pick-test-workspace",
+  "private": true,
+  "scripts": {
+    "build": "echo build",
+    "test": "echo test"
+  }
+}

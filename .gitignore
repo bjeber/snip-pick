@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+coverage/
+*.vsix
+.DS_Store
+.vscode-test/
+.env
+.env.*
+!.env.example
+apps/extension/test/fixtures/workspace/.vscode/snippick.json

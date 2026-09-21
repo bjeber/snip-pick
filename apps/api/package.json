@@ -1,0 +1,33 @@
+{
+  "name": "@snip-pick/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-tenant Snip Pick API: vault storage guarded by better-auth as an OAuth 2.1 authorization server.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "auth:generate": "npx @better-auth/cli@latest generate --config src/auth.ts --output src/db/auth-schema.ts -y"
+  },
+  "dependencies": {
+    "@better-auth/oauth-provider": "^1.7.5",
+    "@hono/node-server": "^1.13.7",
+    "@snip-pick/core": "*",
+    "better-auth": "^1.7.5",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.8",
+    "pg": "^8.23.0",
+    "jose": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.19.2"
+  }
+}

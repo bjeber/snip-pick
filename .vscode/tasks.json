@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "watch",
+      "problemMatcher": "$esbuild-watch",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never",
+        "group": "build"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "path": "apps/extension"
+    },
+    {
+      "type": "npm",
+      "script": "compile:tests",
+      "problemMatcher": "$tsc",
+      "presentation": {
+        "reveal": "never",
+        "group": "build"
+      },
+      "path": "apps/extension"
+    }
+  ]
+}
