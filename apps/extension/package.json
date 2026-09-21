@@ -586,7 +586,7 @@
     "watch": "node esbuild.mjs --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "compile:tests": "node esbuild.mjs --tests",
-    "test:integration": "npm run compile && npm run compile:tests && vscode-test",
+    "test:integration": "pnpm run compile && pnpm run compile:tests && vscode-test",
     "package": "vsce package --no-dependencies",
     "icon": "node scripts/render-icon.mjs",
     "vscode:prepublish": "node esbuild.mjs --production"
