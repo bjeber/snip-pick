@@ -38,13 +38,13 @@ catalog:
   '@types/node': ^20.17.6
   '@types/pg': ^8.23.1 # types for pg
   '@vitest/coverage-v8': ^2.1.4
-  '@vscode/test-cli': ^0.0.10
+  '@vscode/test-cli': ^0.0.15
   '@vscode/test-electron': ^2.4.1
   '@vscode/vsce': ^3.2.0
   better-auth: ^1.7.5 # see @better-auth/oauth-provider
   drizzle-kit: ^0.31.10 # generates migrations for drizzle-orm; keep in step with it
   drizzle-orm: ^0.45.2
-  esbuild: ^0.24.0
+  esbuild: ^0.28.2
   hono: ^4.13.8
   jose: ^6.0.0
   minimatch: ^10.0.1
