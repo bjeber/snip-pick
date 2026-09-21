@@ -37,7 +37,7 @@ catalog:
   '@types/mocha': ^10.0.9
   '@types/node': ^20.17.6
   '@types/pg': ^8.23.1 # types for pg
-  '@vitest/coverage-v8': ^2.1.4
+  '@vitest/coverage-v8': ^5.0.1
   '@vscode/test-cli': ^0.0.10
   '@vscode/test-electron': ^2.4.1
   '@vscode/vsce': ^3.2.0
