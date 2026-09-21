@@ -1,7 +1,7 @@
 import { decodeProtectedHeader, jwtVerify } from 'jose';
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
-import { env } from '../env';
+import { config } from '../config';
 import { keySet } from './jwks';
 
 export interface AccessTokenClaims {
@@ -26,10 +26,10 @@ function bearer(header: string | undefined): string | undefined {
 /** RFC 6750 / RFC 9728 challenge, pointing the client at this resource's metadata. */
 function challenge(c: Context<AuthedEnv>, error: string, description: string): Response {
   const parameters = [
-    `realm="${env.resource}"`,
+    `realm="${config.resource}"`,
     `error="${error}"`,
     `error_description="${description.replace(/"/g, "'")}"`,
-    `resource_metadata="${env.baseUrl}/.well-known/oauth-protected-resource"`,
+    `resource_metadata="${config.baseUrl}/.well-known/oauth-protected-resource"`,
   ].join(', ');
   return c.json(
     { error, error_description: description },
@@ -55,8 +55,8 @@ export const requireAccessToken = createMiddleware<AuthedEnv>(async (c, next) =>
     const header = decodeProtectedHeader(token);
     const keys = await keySet(header.kid);
     const { payload } = await jwtVerify(token, keys, {
-      issuer: env.issuer,
-      audience: env.resource,
+      issuer: config.issuer,
+      audience: config.resource,
     });
     if (typeof payload.sub !== 'string' || payload.sub.length === 0) {
       throw new Error('token has no subject');

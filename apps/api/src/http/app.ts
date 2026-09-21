@@ -2,7 +2,8 @@ import { oauthProviderAuthServerMetadata } from '@better-auth/oauth-provider';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { auth } from '../auth';
-import { AUTH_BASE_PATH as BASE_PATH, env } from '../env';
+import { AUTH_BASE_PATH as BASE_PATH } from '@snip-pick/config';
+import { config } from '../config';
 import { consentPage, signInPage } from './pages';
 import { vaultRoutes } from './routes/vaults';
 
@@ -18,7 +19,9 @@ export function createApp(): Hono {
     }),
   );
 
-  app.get('/health', (c) => c.json({ ok: true, issuer: env.baseUrl, resource: env.resource }));
+  app.get('/health', (c) =>
+    c.json({ ok: true, issuer: config.baseUrl, resource: config.resource }),
+  );
 
   /**
    * RFC 8414 requires the metadata document at the origin root, which `basePath` would otherwise
@@ -32,8 +35,8 @@ export function createApp(): Hono {
   /** RFC 9728: tells a client which authorization server guards this resource. */
   app.get('/.well-known/oauth-protected-resource', (c) =>
     c.json({
-      resource: env.resource,
-      authorization_servers: [env.issuer],
+      resource: config.resource,
+      authorization_servers: [config.issuer],
       bearer_methods_supported: ['header'],
       scopes_supported: ['openid', 'profile', 'email', 'offline_access'],
     }),

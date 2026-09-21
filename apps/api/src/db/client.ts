@@ -1,12 +1,12 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import { env } from '../env';
+import { config } from '../config';
 import * as authSchema from './auth-schema';
 import * as appSchema from './schema';
 
 export const schema = { ...authSchema, ...appSchema };
 
-export const pool = new pg.Pool({ connectionString: env.databaseUrl });
+export const pool = new pg.Pool({ connectionString: config.databaseUrl });
 
 export const db = drizzle(pool, { schema });
 

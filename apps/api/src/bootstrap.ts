@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { oauthClient, oauthClientResource } from './db/auth-schema';
 import { db } from './db/client';
-import { env, VSCODE_CLIENT_ID } from './env';
+import { VSCODE_CLIENT_ID } from '@snip-pick/config';
+import { config } from './config';
 
 /**
  * Seeds the first-party VS Code client.
@@ -19,7 +20,8 @@ export async function seedVsCodeClient(): Promise<void> {
   const now = new Date();
   const values = {
     name: 'Snip Pick for VS Code',
-    redirectUris: env.vscodeRedirectUris,
+    // Copied, not aliased: the config is readonly and drizzle wants an owned array.
+    redirectUris: [...config.vscodeRedirectUris],
     tokenEndpointAuthMethod: 'none',
     applicationType: 'native',
     grantTypes: ['authorization_code', 'refresh_token'],
@@ -38,7 +40,7 @@ export async function seedVsCodeClient(): Promise<void> {
     .values({ id: VSCODE_CLIENT_ID, clientId: VSCODE_CLIENT_ID, createdAt: now, ...values })
     .onConflictDoUpdate({ target: oauthClient.clientId, set: values });
 
-  await linkClientToResource(VSCODE_CLIENT_ID, env.resource);
+  await linkClientToResource(VSCODE_CLIENT_ID, config.resource);
 }
 
 /**

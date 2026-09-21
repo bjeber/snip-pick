@@ -3,7 +3,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { jwt, organization } from 'better-auth/plugins';
 import { db, schema } from './db/client';
-import { env } from './env';
+import { config } from './config';
 
 /**
  * The API is its own authorization server.
@@ -14,9 +14,9 @@ import { env } from './env';
  */
 export const auth = betterAuth({
   appName: 'Snip Pick',
-  baseURL: env.baseUrl,
+  baseURL: config.baseUrl,
   basePath: '/api/auth',
-  secret: env.authSecret,
+  secret: config.authSecret,
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   emailAndPassword: {
     enabled: true,
@@ -33,10 +33,10 @@ export const auth = betterAuth({
       consentPage: '/consent',
       // Access tokens are audience-bound to this API (RFC 8707), so a token minted for another
       // resource cannot be replayed against it.
-      resources: [env.resource],
+      resources: [config.resource],
       // Off unless a deployment opts in: the VS Code client is seeded at boot, so nothing needs
       // open registration in the normal case.
-      allowDynamicClientRegistration: env.allowDynamicClientRegistration,
+      allowDynamicClientRegistration: config.allowDynamicClientRegistration,
     }),
   ],
 });
