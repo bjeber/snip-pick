@@ -1,0 +1,10 @@
+# Allowlist: everything is excluded, then the published files are added back.
+**
+
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!dist/extension.js
+!media/**
+!schemas/**
