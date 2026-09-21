@@ -1,12 +1,12 @@
 import type * as vscode from 'vscode';
 import { pruneUsage, recordUse, type Usage, type UsageEntry } from '@snip-pick/core';
-import { GLOBAL_SCOPE_ID } from './store';
+import { USER_SCOPE_ID } from './store';
 
 export const USAGE_KEY = 'snipPick.usage';
 
 /**
  * Usage statistics live outside the JSON files so that `snippick.json` stays diff-friendly.
- * Global items count in `globalState` (and therefore ride along with Settings Sync), workspace
+ * User-level items count in `globalState` (and therefore ride along with Settings Sync), workspace
  * items in `workspaceState`.
  */
 export class UsageStore {
@@ -15,7 +15,7 @@ export class UsageStore {
   }
 
   private memento(scopeId: string): vscode.Memento {
-    return scopeId === GLOBAL_SCOPE_ID ? this.context.globalState : this.context.workspaceState;
+    return scopeId === USER_SCOPE_ID ? this.context.globalState : this.context.workspaceState;
   }
 
   forScope(scopeId: string): Usage {

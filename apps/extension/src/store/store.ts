@@ -17,7 +17,8 @@ import {
   type SnipPickFile,
 } from '@snip-pick/core';
 
-export const GLOBAL_SCOPE_ID = 'global';
+/** Scope ids are runtime-only; nothing on disk keys off them. */
+export const USER_SCOPE_ID = 'user';
 const RELOAD_DEBOUNCE_MS = 250;
 
 export interface ScopeInfo {
@@ -116,22 +117,22 @@ export class Store implements vscode.Disposable {
   defaultScopeId(): string {
     const preference = vscode.workspace
       .getConfiguration('snipPick')
-      .get<Scope>('defaultScope', 'global');
+      .get<Scope>('defaultScope', 'user');
     if (preference === 'workspace') {
       const writable = this.workspaceScopes().find((scope) => !scope.readonly);
       if (writable) return writable.id;
     }
-    return GLOBAL_SCOPE_ID;
+    return USER_SCOPE_ID;
   }
 
   private async refreshScopes(): Promise<void> {
     vscode.Disposable.from(...this.watchers.splice(0)).dispose();
 
     const wanted = new Map<string, ScopeInfo>();
-    wanted.set(GLOBAL_SCOPE_ID, {
-      id: GLOBAL_SCOPE_ID,
-      kind: 'global',
-      label: 'Global',
+    wanted.set(USER_SCOPE_ID, {
+      id: USER_SCOPE_ID,
+      kind: 'user',
+      label: 'User',
       readonly: false,
       fileUri: vscode.Uri.joinPath(this.context.globalStorageUri, 'snippick.json'),
     });

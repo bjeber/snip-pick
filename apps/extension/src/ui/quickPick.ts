@@ -41,7 +41,7 @@ export interface QuickPickDeps {
 function entryFor(store: Store, scopeId: string, item: Item, readonly: boolean): Entry {
   const scope = store.scope(scopeId);
   const path = groupPath(store.groups(scopeId), item.groupId);
-  const where = [path, scope?.kind === 'global' ? 'Global' : (scope?.label ?? 'Workspace')]
+  const where = [path, scope?.kind === 'user' ? 'User' : (scope?.label ?? 'Workspace')]
     .filter((part) => part.length > 0)
     .join(' · ');
   const buttons = readonly ? [COPY_BUTTON] : [COPY_BUTTON, EDIT_BUTTON, PIN_BUTTON];

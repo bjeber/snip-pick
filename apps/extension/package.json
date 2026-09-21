@@ -533,11 +533,15 @@
         "snipPick.defaultScope": {
           "type": "string",
           "enum": [
-            "global",
+            "user",
             "workspace"
           ],
-          "default": "global",
-          "description": "Scope pre-selected when creating new items."
+          "enumDescriptions": [
+            "Store new items in your user library, available in every project on this machine.",
+            "Store new items in the project's .vscode/snippick.json, so they can be committed."
+          ],
+          "default": "user",
+          "markdownDescription": "Scope pre-selected when creating new items."
         },
         "snipPick.discovery.enabled": {
           "type": "boolean",

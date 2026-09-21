@@ -30,8 +30,10 @@ npm run dev -w apps/api
 
 ## How the pieces fit
 
-The extension's default state is **local**: a global JSON file plus one per workspace folder,
-committable alongside your project. Nothing phones home.
+The extension's default state is **local**, at two levels: a **user** library that follows you
+into every project on your machine, and a **workspace** library in the project's
+`.vscode/snippick.json` that you commit so the whole team gets it on clone. Both are plain,
+diffable JSON, and both show in the tree at once. Nothing phones home.
 
 Signing in to an API adds **remote vaults** next to the local ones — a personal vault inside the
 tenant, plus whichever project vaults you have access to. All of them appear as roots in the same

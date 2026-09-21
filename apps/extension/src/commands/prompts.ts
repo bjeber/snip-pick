@@ -70,7 +70,7 @@ export async function pickScope(
     : writable;
   const picked = await vscode.window.showQuickPick(
     ordered.map((scope) => ({
-      label: scope.kind === 'global' ? '$(globe) Global' : `$(root-folder) ${scope.label}`,
+      label: scope.kind === 'user' ? '$(account) User' : `$(root-folder) ${scope.label}`,
       description: scope.fileUri.fsPath,
       scope,
     })),

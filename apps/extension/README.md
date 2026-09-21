@@ -23,8 +23,9 @@ keystrokes. Snip Pick knows which file you have open, so the things that matter 
   Enter, so you get the last word. Destructive-looking commands ask first.
 - **Variables.** `{{name}}`, `{{name:default}}`, `{{secret:TOKEN}}` and editor built-ins like
   `${relativeFile}`, resolved just before the command is sent.
-- **Two scopes.** Global items follow you around; workspace items live in
-  `.vscode/snippick.json` and can be committed with the project.
+- **Two local levels.** _User_ items follow you into every project on your machine; _workspace_
+  items live in `.vscode/snippick.json` and get committed with the project, so the whole team has
+  them on clone. Both show in the tree at once.
 - **Auto-discovery.** `package.json` scripts, `Makefile` targets and `justfile` recipes show up
   read-only under **Discovered**, ready to run or to copy into your own library.
 - **Plain JSON.** Human-readable, diffable, hand-editable — with schema-backed IntelliSense.
@@ -54,10 +55,27 @@ proposed API that is not publishable, so this one drag is the supported route.)
 
 ## Where the data lives
 
-| Scope     | File                                                                                                                         |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Global    | `<globalStorage>/snippick.json` — see **Help → Toggle Developer Tools → Application** or your platform's VS Code user folder |
-| Workspace | `<workspace folder>/.vscode/snippick.json`, one per folder in a multi-root workspace                                         |
+Snippets live at two levels, and both are visible in the tree at the same time.
+
+| Level         | File                                       | Who sees it                                       |
+| ------------- | ------------------------------------------ | ------------------------------------------------- |
+| **User**      | `<globalStorage>/snippick.json`            | You, in every project you open on this machine    |
+| **Workspace** | `<workspace folder>/.vscode/snippick.json` | Anyone who checks out the project — **commit it** |
+
+Use the **User** level for what you carry between jobs: your logging snippet, your `git`
+incantations. Use the **Workspace** level for what belongs to a codebase — its build commands, its
+test scaffolding, its deploy steps — and commit `.vscode/snippick.json` so the whole team gets
+them on clone. In a multi-root workspace each folder gets its own file and its own root in the
+tree.
+
+Move an item between levels by dragging it in the tree; you are asked to confirm, because it means
+writing to a different file. `snipPick.defaultScope` decides which level is pre-selected when you
+create something.
+
+> One thing the user level does **not** do: follow you to another machine. Settings Sync carries
+> settings and usage statistics, not arbitrary files, and keeping the library as plain diffable
+> JSON was the higher priority. Cross-machine is what a personal
+> [remote vault](#remote-vaults-optional) is for.
 
 Files are created lazily on the first write, pretty-printed with two-space indentation and a stable
 key order, and written atomically (temp file plus rename). External changes — a `git pull`, or your
@@ -184,7 +202,7 @@ it should just work — if it does not, your administrator can add the URI to
 | `snipPick.clickAction`         | `"insertOrRun"` | What clicking an item in the tree does: `insertOrRun`, `edit` or `none`.                      |
 | `snipPick.runBehavior`         | `"paste"`       | `paste` sends the command without Enter; `execute` runs it immediately.                       |
 | `snipPick.confirmDangerous`    | `true`          | Show a modal with the resolved command when it looks destructive.                             |
-| `snipPick.defaultScope`        | `"global"`      | Scope pre-selected when creating items.                                                       |
+| `snipPick.defaultScope`        | `"user"`        | Which level is pre-selected when creating items: `user` or `workspace`.                       |
 | `snipPick.discovery.enabled`   | `true`          | Show the read-only **Discovered** node.                                                       |
 | `snipPick.completions.enabled` | `true`          | Offer snippets that have a `prefix` as IntelliSense items.                                    |
 

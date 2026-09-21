@@ -2,7 +2,13 @@
  * Core data model. This module must stay free of `vscode` imports so it can be unit-tested.
  */
 
-export type Scope = 'global' | 'workspace';
+/**
+ * Where a library is stored.
+ *
+ * - `user` — follows the person across every project they open on this machine.
+ * - `workspace` — lives in the project, under `.vscode/`, and is meant to be committed.
+ */
+export type Scope = 'user' | 'workspace';
 
 export type ItemType = 'snippet' | 'command';
 

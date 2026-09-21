@@ -319,13 +319,13 @@ export class LibraryTreeProvider
     const multiRoot = this.store.workspaceScopes().length > 1;
     const label = !scope
       ? scopeId
-      : scope.kind === 'global'
-        ? 'Global'
+      : scope.kind === 'user'
+        ? 'User'
         : multiRoot
           ? scope.label
           : 'Workspace';
     const node = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Expanded);
-    node.iconPath = new vscode.ThemeIcon(scope?.kind === 'global' ? 'globe' : 'root-folder');
+    node.iconPath = new vscode.ThemeIcon(scope?.kind === 'user' ? 'account' : 'root-folder');
     node.contextValue = scope?.readonly ? 'scopeRoot.readonly' : 'scopeRoot';
     if (scope?.readonly) node.description = 'read-only';
     node.tooltip = scope ? scope.fileUri.fsPath : undefined;

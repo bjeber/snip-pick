@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Snip Pick: Select Vaults…** lists your personal vault in each tenant plus a project vault for
   every team you belong to; the ones you pick become extra roots in the tree.
 
+### Changed
+
+- The user-level library is labelled **User** rather than **Global**, matching VS Code's own
+  vocabulary for the same split. `snipPick.defaultScope` now takes `user` (was `global`).
+
 ### Note
 
 - Reading and writing remote vault contents is not implemented yet: a mounted vault renders a

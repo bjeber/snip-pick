@@ -2,7 +2,7 @@ import * as assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 import type { SnipPickApi } from '../../src/extension';
 import type { Item } from '@snip-pick/core';
-import { GLOBAL_SCOPE_ID } from '../../src/store/store';
+import { USER_SCOPE_ID } from '../../src/store/store';
 
 const EXTENSION_ID = 'bieber.snip-pick';
 
@@ -88,23 +88,60 @@ suite('Snip Pick', () => {
     }
   });
 
-  test('exposes a global scope and one scope per workspace folder', () => {
+  test('exposes a user level and one workspace level per folder', () => {
     const scopes = api.store.scopes();
-    assert.ok(scopes.some((scope) => scope.id === GLOBAL_SCOPE_ID));
-    assert.equal(
-      scopes.filter((scope) => scope.kind === 'workspace').length,
-      vscode.workspace.workspaceFolders?.length ?? 0,
+
+    // User level: follows the person across every project they open.
+    const user = scopes.find((scope) => scope.id === USER_SCOPE_ID);
+    assert.ok(user, 'there should be a user-level scope');
+    assert.equal(user.kind, 'user');
+    assert.ok(
+      !user.fileUri.path.includes('/.vscode/'),
+      'the user library lives in global storage, not in any project',
     );
+
+    // Workspace level: inside the project, under .vscode/, so it can be committed.
+    const workspaces = scopes.filter((scope) => scope.kind === 'workspace');
+    assert.equal(workspaces.length, vscode.workspace.workspaceFolders?.length ?? 0);
+    for (const scope of workspaces) {
+      assert.ok(
+        scope.fileUri.path.endsWith('/.vscode/snippick.json'),
+        'a workspace library must live in the project so it can be committed',
+      );
+      const folder = vscode.workspace.workspaceFolders?.find((entry) =>
+        scope.fileUri.path.startsWith(entry.uri.path),
+      );
+      assert.ok(folder, 'the workspace library must sit inside its own folder');
+    }
+  });
+
+  test('keeps the two local levels independent', async () => {
+    const workspace = api.store.workspaceScopes()[0];
+    assert.ok(workspace);
+
+    const userItem = await add(USER_SCOPE_ID, { title: 'User level' });
+    const workspaceItem = await add(workspace.id, { title: 'Project level' });
+
+    const userIds = api.store.items(USER_SCOPE_ID).map((entry) => entry.id);
+    const workspaceIds = api.store.items(workspace.id).map((entry) => entry.id);
+    assert.ok(userIds.includes(userItem.id));
+    assert.ok(!userIds.includes(workspaceItem.id), 'levels must not leak into each other');
+    assert.ok(workspaceIds.includes(workspaceItem.id));
+    assert.ok(!workspaceIds.includes(userItem.id));
+
+    // Both are visible at once, which is the point of having levels rather than a mode.
+    const everything = api.store.allItems().map((entry) => entry.item.id);
+    assert.ok(everything.includes(userItem.id) && everything.includes(workspaceItem.id));
   });
 
   test('renders scopes, groups and items in the tree', async () => {
-    const group = await api.store.addGroup(GLOBAL_SCOPE_ID, 'Tree group');
-    const item = await add(GLOBAL_SCOPE_ID, { title: 'Grouped', groupId: group.id });
+    const group = await api.store.addGroup(USER_SCOPE_ID, 'Tree group');
+    const item = await add(USER_SCOPE_ID, { title: 'Grouped', groupId: group.id });
     try {
       const roots = api.tree.getChildren();
       assert.ok(roots.length >= 1);
       const globalRoot = roots.find(
-        (node) => node.kind === 'scope' && node.scopeId === GLOBAL_SCOPE_ID,
+        (node) => node.kind === 'scope' && node.scopeId === USER_SCOPE_ID,
       );
       assert.ok(globalRoot, 'the Global root should exist');
 
@@ -122,12 +159,12 @@ suite('Snip Pick', () => {
       assert.equal(treeItem.command?.command, 'snipPick.activate');
       assert.ok(String(item.id).length > 0);
     } finally {
-      await api.store.deleteGroup(GLOBAL_SCOPE_ID, group.id, 'deleteItems');
+      await api.store.deleteGroup(USER_SCOPE_ID, group.id, 'deleteItems');
     }
   });
 
   test('inserts a snippet into the active editor', async () => {
-    const item = await add(GLOBAL_SCOPE_ID, {
+    const item = await add(USER_SCOPE_ID, {
       title: 'Logger',
       body: 'console.log($1);',
     });
@@ -139,7 +176,7 @@ suite('Snip Pick', () => {
 
     await vscode.commands.executeCommand('snipPick.insert', {
       kind: 'item',
-      scopeId: GLOBAL_SCOPE_ID,
+      scopeId: USER_SCOPE_ID,
       itemId: item.id,
     });
 
@@ -148,37 +185,34 @@ suite('Snip Pick', () => {
   });
 
   test('copies an item to the clipboard', async () => {
-    const item = await add(GLOBAL_SCOPE_ID, { type: 'command', body: 'echo hi' });
+    const item = await add(USER_SCOPE_ID, { type: 'command', body: 'echo hi' });
     await vscode.commands.executeCommand('snipPick.copy', {
       kind: 'item',
-      scopeId: GLOBAL_SCOPE_ID,
+      scopeId: USER_SCOPE_ID,
       itemId: item.id,
     });
     assert.equal(await vscode.env.clipboard.readText(), 'echo hi');
   });
 
   test('pins and unpins', async () => {
-    const item = await add(GLOBAL_SCOPE_ID);
-    const ref = { kind: 'item', scopeId: GLOBAL_SCOPE_ID, itemId: item.id };
+    const item = await add(USER_SCOPE_ID);
+    const ref = { kind: 'item', scopeId: USER_SCOPE_ID, itemId: item.id };
     await vscode.commands.executeCommand('snipPick.togglePin', ref);
-    assert.equal(api.store.getItem({ scopeId: GLOBAL_SCOPE_ID, itemId: item.id })?.pinned, true);
+    assert.equal(api.store.getItem({ scopeId: USER_SCOPE_ID, itemId: item.id })?.pinned, true);
     await vscode.commands.executeCommand('snipPick.togglePin', ref);
-    assert.equal(
-      api.store.getItem({ scopeId: GLOBAL_SCOPE_ID, itemId: item.id })?.pinned,
-      undefined,
-    );
+    assert.equal(api.store.getItem({ scopeId: USER_SCOPE_ID, itemId: item.id })?.pinned, undefined);
   });
 
   test('persists items to disk and reloads them', async () => {
-    const item = await add(GLOBAL_SCOPE_ID, { title: 'Persisted' });
-    const uri = await api.store.ensureFile(GLOBAL_SCOPE_ID);
+    const item = await add(USER_SCOPE_ID, { title: 'Persisted' });
+    const uri = await api.store.ensureFile(USER_SCOPE_ID);
     const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
     assert.ok(text.includes('"Persisted"'));
     assert.ok(text.endsWith('\n'));
 
     await api.store.reloadAll();
     assert.equal(
-      api.store.getItem({ scopeId: GLOBAL_SCOPE_ID, itemId: item.id })?.title,
+      api.store.getItem({ scopeId: USER_SCOPE_ID, itemId: item.id })?.title,
       'Persisted',
     );
   });
@@ -223,11 +257,11 @@ suite('Snip Pick', () => {
   });
 
   test('ranks relevant items above the rest', async () => {
-    const relevant = await add(GLOBAL_SCOPE_ID, {
+    const relevant = await add(USER_SCOPE_ID, {
       title: 'Zeta relevant',
       context: { languages: ['javascript'] },
     });
-    await add(GLOBAL_SCOPE_ID, { title: 'Alpha neutral' });
+    await add(USER_SCOPE_ID, { title: 'Alpha neutral' });
 
     const document = await vscode.workspace.openTextDocument({
       content: '',
@@ -236,7 +270,7 @@ suite('Snip Pick', () => {
     await vscode.window.showTextDocument(document);
     await new Promise((resolve) => setTimeout(resolve, 250));
 
-    const scopeNode = { kind: 'scope', scopeId: GLOBAL_SCOPE_ID } as const;
+    const scopeNode = { kind: 'scope', scopeId: USER_SCOPE_ID } as const;
     const items = api.tree
       .getChildren(scopeNode)
       .filter((node) => node.kind === 'item')
