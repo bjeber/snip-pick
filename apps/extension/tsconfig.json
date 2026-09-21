@@ -1,4 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Explicit, like every other package here. TypeScript 7's automatic @types discovery stops
+    // at the nearest node_modules/@types, and this package has one of its own (mocha, vscode) —
+    // so the root's @types/node was never reached and every URL, TextEncoder and setTimeout in
+    // the program went undefined.
+    "types": ["node", "mocha"]
+  },
   "include": ["src/**/*.ts", "test/**/*.ts"]
 }

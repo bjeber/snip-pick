@@ -53,5 +53,5 @@ catalog:
   oxlint: 1.83.0 # exact: a range here would change what CI rejects without a lockfile diff
   pg: ^8.23.0
   tsx: ^4.19.2
-  typescript: ^5.6.3
+  typescript: ^7.0.2
   vitest: ^5.0.1
