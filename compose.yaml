@@ -1,0 +1,21 @@
+# Postgres for local API development: `npm run db:up`.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: snippick
+      POSTGRES_PASSWORD: snippick
+      POSTGRES_DB: snippick
+    ports:
+      - '55432:5432'
+    volumes:
+      - snippick-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U snippick']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  snippick-db:

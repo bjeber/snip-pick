@@ -1,5 +1,7 @@
-dist/
-out/
-node_modules/
-coverage/
+**/dist/
+**/out/
+**/node_modules/
+**/coverage/
+**/drizzle/
 CHANGELOG.md
+apps/extension/CHANGELOG.md

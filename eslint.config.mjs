@@ -4,7 +4,14 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'out/**', 'node_modules/**', 'coverage/**', '.vscode-test/**'],
+    ignores: [
+      '**/dist/**',
+      '**/out/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/.vscode-test/**',
+      '**/drizzle/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -28,10 +35,21 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/model/**/*.ts', 'src/importers/**/*.ts'],
+    // The shared packages and the API must stay free of the vscode API: it is what lets the
+    // model, the sync client and the server share one contract, and what keeps them testable.
+    files: ['packages/**/*.ts', 'apps/api/**/*.ts'],
     rules: {
-      // Pure modules must stay free of the vscode API so they can be unit-tested.
-      'no-restricted-imports': ['error', { paths: ['vscode'] }],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'vscode',
+              message: 'Shared packages and the API must not depend on the VS Code API.',
+            },
+          ],
+        },
+      ],
     },
   },
   {

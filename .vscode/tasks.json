@@ -6,14 +6,25 @@
       "script": "watch",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
-      "presentation": { "reveal": "never", "group": "build" },
-      "group": { "kind": "build", "isDefault": true }
+      "presentation": {
+        "reveal": "never",
+        "group": "build"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "path": "apps/extension"
     },
     {
       "type": "npm",
       "script": "compile:tests",
       "problemMatcher": "$tsc",
-      "presentation": { "reveal": "never", "group": "build" }
+      "presentation": {
+        "reveal": "never",
+        "group": "build"
+      },
+      "path": "apps/extension"
     }
   ]
 }

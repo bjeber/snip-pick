@@ -5,4 +5,7 @@ coverage/
 *.vsix
 .DS_Store
 .vscode-test/
-test/fixtures/workspace/.vscode/snippick.json
+.env
+.env.*
+!.env.example
+apps/extension/test/fixtures/workspace/.vscode/snippick.json

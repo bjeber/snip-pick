@@ -5,8 +5,8 @@
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/apps/extension"],
+      "outFiles": ["${workspaceFolder}/apps/extension/dist/**/*.js"],
       "preLaunchTask": "npm: watch"
     },
     {
@@ -14,11 +14,14 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/integration/index",
-        "${workspaceFolder}/test/fixtures/workspace"
+        "--extensionDevelopmentPath=${workspaceFolder}/apps/extension",
+        "--extensionTestsPath=${workspaceFolder}/apps/extension/out/apps/extension/test/integration/index",
+        "${workspaceFolder}/apps/extension/test/fixtures/workspace"
       ],
-      "outFiles": ["${workspaceFolder}/out/**/*.js", "${workspaceFolder}/dist/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/apps/extension/out/**/*.js",
+        "${workspaceFolder}/apps/extension/dist/**/*.js"
+      ],
       "preLaunchTask": "npm: compile:tests"
     }
   ]
