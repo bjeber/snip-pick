@@ -15,11 +15,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
-    "@snip-pick/auth": "*",
-    "@snip-pick/auth-verify": "*",
-    "@snip-pick/config": "*",
-    "@snip-pick/contracts": "*",
-    "@snip-pick/db": "*",
+    "@snip-pick/auth": "workspace:*",
+    "@snip-pick/auth-verify": "workspace:*",
+    "@snip-pick/config": "workspace:*",
+    "@snip-pick/contracts": "workspace:*",
+    "@snip-pick/db": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.8"
   },

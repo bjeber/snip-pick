@@ -10,10 +10,10 @@ secret is ever pasted into a settings file.
 ## Running it
 
 ```sh
-npm run db:up                       # from the repo root: Postgres on :55432
+pnpm run db:up                       # from the repo root: Postgres on :55432
 cp .env.example .env                # then edit BETTER_AUTH_SECRET
-npm run db:migrate -w apps/api
-npm run dev -w apps/api
+pnpm --filter @snip-pick/api db:migrate
+pnpm --filter @snip-pick/api dev
 ```
 
 `GET /health` confirms it is up and prints the issuer and resource identifier it derived.
@@ -76,5 +76,5 @@ It skips unless `DATABASE_URL` and `BETTER_AUTH_SECRET` are both set. The secret
 the database was populated with — better-auth encrypts the JWKS private key with it.
 
 ```sh
-DATABASE_URL=... BETTER_AUTH_SECRET=... npx vitest run apps/api
+DATABASE_URL=... BETTER_AUTH_SECRET=... pnpm exec vitest run apps/api
 ```

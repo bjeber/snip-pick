@@ -107,6 +107,28 @@ describe('esbuild rejects the artifact', () => {
     expect(serverCodeIn(['../../node_modules/hono/dist/index.js'])).toHaveLength(1);
   });
 
+  /**
+   * pnpm resolves through its content-addressed store, so the paths esbuild reports are nested
+   * and carry the peer-dependency hash. Detection keys off the inner `node_modules/<name>/`,
+   * which is the one segment that stays clean.
+   */
+  it('sees through pnpm store paths', () => {
+    expect(
+      serverCodeIn([
+        '../../node_modules/.pnpm/drizzle-orm@0.45.2_@types+pg@8.23.1_kysely@0.29.6_pg@8.23.0/node_modules/drizzle-orm/entity.js',
+      ]),
+    ).toHaveLength(1);
+    expect(
+      serverCodeIn(['../../node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/index.js']),
+    ).toHaveLength(1);
+    // A store directory names its own peers, so the hash must not be what decides this.
+    expect(
+      serverCodeIn([
+        '../../node_modules/.pnpm/vitest@2.1.9_@types+node@20.19.43/node_modules/vitest/index.js',
+      ]),
+    ).toEqual([]);
+  });
+
   /** packages/contracts and packages/core are the two that legitimately do reach the bundle. */
   it('does not mistake the isomorphic packages for server code', () => {
     expect(

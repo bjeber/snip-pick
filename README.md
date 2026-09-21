@@ -43,20 +43,23 @@ Two rules keep that shape, and both are enforced rather than documented:
 ## Getting started
 
 ```sh
-nvm use                # Node 20, per .nvmrc — the version CI runs
-npm install
-npm run check          # lint, typecheck, unit tests, build — everything
+nvm use                 # Node 20, per .nvmrc — the version CI runs
+corepack enable         # pnpm, at the version in package.json's packageManager field
+pnpm install
+pnpm run check          # lint, typecheck, unit tests, build — everything
 ```
+
+Linting and formatting are [oxlint](https://oxc.rs) and oxfmt; `pnpm run format` writes.
 
 Extension development: press <kbd>F5</kbd> (see [apps/extension/README.md](apps/extension/README.md)).
 
 API development:
 
 ```sh
-npm run db:up                       # Postgres on :55432
+pnpm run db:up                       # Postgres on :55432
 cp apps/api/.env.example apps/api/.env
-npm run db:migrate -w apps/api
-npm run dev -w apps/api
+pnpm --filter @snip-pick/api db:migrate
+pnpm --filter @snip-pick/api dev
 ```
 
 ## How the pieces fit

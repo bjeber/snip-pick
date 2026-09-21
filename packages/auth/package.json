@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@better-auth/oauth-provider": "^1.7.5",
-    "@snip-pick/config": "*",
-    "@snip-pick/db": "*",
+    "@snip-pick/config": "workspace:*",
+    "@snip-pick/db": "workspace:*",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2"
   }

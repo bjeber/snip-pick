@@ -1,0 +1,14 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# pnpm does not run a dependency's install scripts unless it is listed here. These are the three
+# that have them, and all three keep the behaviour npm gave them: esbuild's postinstall fetches
+# the platform binary it cannot work without, and keytar and vsce-sign are @vscode/vsce's native
+# pieces. Only `vsce publish` appears to need those two, and the release workflow is the one path
+# that cannot be exercised outside a real release — so they stay on rather than being trimmed on
+# a guess.
+allowBuilds:
+  esbuild: true
+  keytar: true
+  '@vscode/vsce-sign': true

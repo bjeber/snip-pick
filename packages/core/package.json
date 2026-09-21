@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@snip-pick/contracts": "*",
+    "@snip-pick/contracts": "workspace:*",
     "minimatch": "^10.0.1"
   }
 }

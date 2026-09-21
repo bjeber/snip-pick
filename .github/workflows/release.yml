@@ -18,9 +18,14 @@ jobs:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # These jobs run repository code (npm ci, build scripts, tests). Without this the
-          # checkout token stays in .git/config where that code could read it.
+          # These jobs run repository code (pnpm install, build scripts, tests). Without this
+          # the checkout token stays in .git/config where that code could read it.
           persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+        # No version here on purpose: it reads the `packageManager` field in package.json, so the
+        # version CI uses and the one corepack gives a contributor cannot drift.
 
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -28,10 +33,10 @@ jobs:
           # From .nvmrc, so contributors and CI cannot end up on different majors — which is
           # how a Node 22-only API reached this workflow in the first place.
           node-version-file: .nvmrc
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Verify the tag matches the extension manifest
         run: |
@@ -46,11 +51,11 @@ jobs:
           echo "VSIX=$PWD/snip-pick-$version.vsix" >> "$GITHUB_ENV"
 
       - name: Verify the build
-        run: npm run check
+        run: pnpm run check
 
       - name: Package
         working-directory: apps/extension
-        run: npx vsce package --no-dependencies --out "$VSIX"
+        run: pnpm exec vsce package --no-dependencies --out "$VSIX"
 
       - name: Create the GitHub release
         env:
@@ -60,9 +65,9 @@ jobs:
       - name: Publish to the VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx vsce publish --packagePath "$VSIX"
+        run: pnpm exec vsce publish --packagePath "$VSIX"
 
       - name: Publish to Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx ovsx publish "$VSIX" --pat "$OVSX_PAT"
+        run: pnpm exec ovsx publish "$VSIX" --pat "$OVSX_PAT"
