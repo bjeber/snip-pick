@@ -43,7 +43,7 @@ Two rules keep that shape, and both are enforced rather than documented:
 ## Getting started
 
 ```sh
-nvm use                 # Node 20, per .nvmrc — the version CI runs
+nvm use                 # Node 22, per .nvmrc — the version CI runs
 corepack enable         # pnpm, at the version in package.json's packageManager field
 pnpm install
 pnpm run check          # lint, typecheck, unit tests, build — everything
