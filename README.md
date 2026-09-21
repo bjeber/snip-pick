@@ -13,6 +13,7 @@ your team.
 ## Getting started
 
 ```sh
+nvm use                # Node 20, per .nvmrc — the version CI runs
 npm install
 npm run check          # lint, typecheck, unit tests, build — everything
 ```

@@ -1,10 +1,12 @@
 import { build, context } from 'esbuild';
-import { globSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import process from 'node:process';
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 const tests = process.argv.includes('--tests');
+
+const TEST_DIR = 'test/integration';
 
 /** @type {import('esbuild').BuildOptions} */
 const extension = {
@@ -30,7 +32,12 @@ const extension = {
  */
 /** @type {import('esbuild').BuildOptions} */
 const integrationTests = {
-  entryPoints: globSync('test/integration/**/*.ts'),
+  // readdirSync rather than fs.globSync: this package declares Node >= 20, and globSync only
+  // landed in Node 22.
+  entryPoints: readdirSync(TEST_DIR, { recursive: true })
+    .map((entry) => String(entry).replace(/\\/g, '/'))
+    .filter((entry) => entry.endsWith('.ts'))
+    .map((entry) => `${TEST_DIR}/${entry}`),
   bundle: true,
   outdir: 'out/test/integration',
   platform: 'node',
