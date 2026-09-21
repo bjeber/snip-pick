@@ -143,6 +143,39 @@ a single line, so `runBehavior: "paste"` still lets you read and edit the whole 
 pressing Enter. `&&` needs a shell that understands it — bash, zsh, fish, cmd.exe and PowerShell 7+
 all do; Windows PowerShell 5.1 does not, so use `;` in your steps there.
 
+## Remote vaults (optional)
+
+Snip Pick is local by default and stays that way unless you point it at a server. Nothing phones
+home, and no account is needed to use any of the above.
+
+If your team runs a [Snip Pick API](../api), set `snipPick.remote.url` to it — workspace settings
+are a good place, so a project points at the company server automatically — then run
+**Snip Pick: Sign In to a Server…**.
+
+Signing in opens your browser, you authenticate against your own company's server, and it hands
+the editor back a token. The flow is **OAuth 2.1 with PKCE** against a public client: there is no
+API key to paste anywhere, and no long-lived secret in your settings. Tokens live in VS Code's
+SecretStorage (your OS keychain) and refresh themselves; the account shows up in the **Accounts**
+menu in the activity bar, alongside your other sign-ins, and several accounts can coexist if you
+work with more than one company.
+
+Once signed in, **Snip Pick: Select Vaults…** lists what you can reach:
+
+- **your personal vault** in each tenant — private to you, one per tenant, so two employers never
+  mix;
+- **a project vault** for every team you belong to — shared with that team.
+
+The ones you pick appear as extra roots in the tree, beside Global and your workspace folders.
+
+> **Reading and writing remote vault contents is not implemented yet.** This release signs you in
+> and shows which vaults you have; a mounted vault currently renders a placeholder instead of its
+> items. Delta sync is the next piece of work.
+
+If you use VS Code Insiders, Remote SSH, Codespaces or vscode.dev, the sign-in redirect comes back
+through a different URI than on desktop stable. The server ships with all of them registered, so
+it should just work — if it does not, your administrator can add the URI to
+`VSCODE_REDIRECT_URIS`.
+
 ## Settings
 
 | Setting                        | Default         | What it does                                                                                  |
@@ -176,6 +209,9 @@ live on the tree's context menus, where they have something to act on.
   copied to the clipboard instead.
 - **Secrets.** `{{secret:NAME}}` values go through VS Code's SecretStorage (the OS keychain). They
   are never written to `snippick.json`, never exported, and only the list of names is remembered.
+- **Sign-in.** OAuth 2.1 with PKCE against a public client — no API keys, and nothing long-lived in
+  settings. Access and refresh tokens are kept in SecretStorage, never in a file. The `state` and
+  the RFC 9207 `iss` of every callback are checked before a code is exchanged.
 - **Copying** an item puts its raw body on the clipboard — variables are _not_ resolved, so a
   secret cannot leak into the clipboard by accident.
 

@@ -21,7 +21,30 @@ jobs:
       matrix:
         # macos-latest and windows-latest are deactivated for now — add them back to this list
         # to restore the full matrix; the OS-conditional steps below are already in place.
+        # Note: the API tests need the Postgres service, which only runs on Linux runners.
         os: [ubuntu-latest]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: snippick
+          POSTGRES_PASSWORD: snippick
+          POSTGRES_DB: snippick
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U snippick"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://snippick:snippick@localhost:5432/snippick
+      # Not a secret: this database exists only for the length of the job. The API test needs the
+      # same value the schema was created with, because better-auth encrypts its JWKS with it.
+      BETTER_AUTH_SECRET: ci-only-secret-for-an-ephemeral-database
+
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -41,11 +64,15 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
-      - name: Unit tests
+      - name: Migrate the test database
+        if: runner.os == 'Linux'
+        run: npm run db:migrate --workspace apps/api
+
+      - name: Unit and API tests
         run: npm run test:unit
 
       - name: Build
-        run: npm run compile
+        run: npm run build
 
       - name: Integration tests (Linux)
         if: runner.os == 'Linux'
@@ -55,6 +82,6 @@ jobs:
         if: runner.os != 'Linux'
         run: npm run test:integration
 
-      - name: Package
+      - name: Package the extension
         if: runner.os == 'Linux'
-        run: npx vsce package --out snip-pick.vsix
+        run: npm run package

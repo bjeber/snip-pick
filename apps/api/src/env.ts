@@ -75,6 +75,9 @@ export const env = {
   issuer: `${baseUrl}${AUTH_BASE_PATH}`,
   vscodeRedirectUris: list('VSCODE_REDIRECT_URIS', [
     'vscode://bieber.snip-pick/auth',
+    // VS Code Insiders uses its own URI scheme, and asExternalUri tunnels through vscode.dev
+    // under Remote SSH, Codespaces and the web build. Redirect URIs are matched exactly.
+    'vscode-insiders://bieber.snip-pick/auth',
     'https://vscode.dev/redirect',
   ]),
   allowDynamicClientRegistration: flag('ALLOW_DYNAMIC_CLIENT_REGISTRATION'),

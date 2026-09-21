@@ -32,6 +32,10 @@ const EXPECTED_COMMANDS = [
   'snipPick.setSecret',
   'snipPick.clearSecrets',
   'snipPick.copyDiscovered',
+  'snipPick.signIn',
+  'snipPick.signOut',
+  'snipPick.selectVaults',
+  'snipPick.refreshRemote',
 ];
 
 function makeItem(overrides: Partial<Item> = {}): Item {
@@ -188,6 +192,25 @@ suite('Snip Pick', () => {
     assert.ok(text.includes('Workspace item'));
     assert.ok(scope.fileUri.path.endsWith('/.vscode/snippick.json'));
     assert.ok(item.id.length > 0);
+  });
+
+  test('starts fully local, with no server configured and no session', () => {
+    assert.equal(
+      vscode.workspace.getConfiguration('snipPick').get<string>('remote.url'),
+      '',
+      'the extension should be local-only until a server is configured',
+    );
+    assert.equal(api.remote.signedIn(), false);
+    assert.deepEqual([...api.remote.vaults()], []);
+    assert.deepEqual(api.remote.mounted(), []);
+  });
+
+  test('contributes an authentication provider', async () => {
+    // getSession with createIfNone:false must resolve (not throw) for a registered provider.
+    const session = await vscode.authentication.getSession('snip-pick', ['openid'], {
+      createIfNone: false,
+    });
+    assert.equal(session, undefined, 'there should be no session before signing in');
   });
 
   test('discovers package.json scripts in the test workspace', () => {

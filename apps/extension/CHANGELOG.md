@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional remote vaults. Point `snipPick.remote.url` at a self-hosted Snip Pick API and sign in
+  with OAuth 2.1 + PKCE — no API keys. Sessions appear in VS Code's Accounts menu, tokens live in
+  SecretStorage and refresh themselves, and several accounts can coexist.
+- **Snip Pick: Select Vaults…** lists your personal vault in each tenant plus a project vault for
+  every team you belong to; the ones you pick become extra roots in the tree.
+
+### Note
+
+- Reading and writing remote vault contents is not implemented yet: a mounted vault renders a
+  placeholder. Delta sync is next.
+
 ## [0.1.0] - 2026-09-21
 
 ### Added

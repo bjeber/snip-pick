@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { registerCompletions } from './completions';
+import { registerAuthCommands } from './commands/authCommands';
 import { registerCreateCommands } from './commands/createCommands';
 import { registerDiscoveryCommands } from './commands/discoveryCommands';
 import { registerGroupCommands } from './commands/groupCommands';
@@ -8,7 +9,9 @@ import { registerSecretCommands } from './commands/secretCommands';
 import { registerTransferCommands } from './commands/transferCommands';
 import { registerViewCommands, syncRelevantOnlyContext } from './commands/viewCommands';
 import type { Services } from './commands/services';
+import { SnipPickAuthProvider } from './auth/authProvider';
 import { ContextService } from './context/contextService';
+import { RemoteService } from './remote/remoteService';
 import { DiscoveryService } from './discovery/discoveryService';
 import { initLog, log } from './log';
 import { ItemRunner } from './runner/runner';
@@ -27,6 +30,7 @@ export interface SnipPickApi {
   tree: LibraryTreeProvider;
   contextService: ContextService;
   discovery: DiscoveryService;
+  remote: RemoteService;
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<SnipPickApi> {
@@ -41,12 +45,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<SnipPi
   const contextService = new ContextService();
   const discovery = new DiscoveryService();
   const terminals = new TerminalRunner();
+  const authProvider = new SnipPickAuthProvider(context);
+  const remote = new RemoteService(context, authProvider);
   const resolver = new TemplateResolver(secrets, history);
   const runner = new ItemRunner(store, usage, resolver, terminals, contextService);
 
-  context.subscriptions.push(store, contextService, discovery, terminals);
+  context.subscriptions.push(store, contextService, discovery, terminals, authProvider, remote);
 
-  const tree = new LibraryTreeProvider(store, usage, contextService, discovery);
+  const tree = new LibraryTreeProvider(store, usage, contextService, discovery, remote);
   const treeView = vscode.window.createTreeView<TreeNode>('snipPick.library', {
     treeDataProvider: tree,
     dragAndDropController: tree,
@@ -66,6 +72,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<SnipPi
     secrets,
     contextService,
     discovery,
+    remote,
     runner,
     tree,
     treeView,
@@ -79,6 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<SnipPi
     ...registerTransferCommands(services),
     ...registerSecretCommands(services),
     ...registerDiscoveryCommands(services),
+    ...registerAuthCommands(services),
     registerCompletions(store, contextService),
   );
 
@@ -87,10 +95,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<SnipPi
   await store.initialize();
   await contextService.initialize();
   await discovery.refresh();
+  // Remote vaults load in the background: a slow or unreachable server must never hold up
+  // activation, and the tree renders its local scopes immediately either way.
+  void remote.refresh();
   tree.refresh();
   log().info(`Snip Pick ready with ${store.allItems().length} item(s)`);
 
-  return { store, tree, contextService, discovery };
+  return { store, tree, contextService, discovery, remote };
 }
 
 export function deactivate(): void {

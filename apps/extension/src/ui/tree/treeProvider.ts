@@ -9,6 +9,7 @@ import {
   type Item,
 } from '@snip-pick/core';
 import type { DiscoveryService } from '../../discovery/discoveryService';
+import type { RemoteService } from '../../remote/remoteService';
 import type { ItemRef, ScopeInfo, Store } from '../../store/store';
 import type { UsageStore } from '../../store/usageStore';
 import { ItemDecorationProvider, type ItemDecorationState } from './decorations';
@@ -41,6 +42,7 @@ export class LibraryTreeProvider
     private readonly usage: UsageStore,
     private readonly contextService: ContextService,
     private readonly discovery: DiscoveryService,
+    private readonly remote: RemoteService,
   ) {
     this.decorations = new ItemDecorationProvider((ref) => this.decorationFor(ref));
     this.disposables.push(
@@ -49,6 +51,7 @@ export class LibraryTreeProvider
       this.store.onDidChange(() => this.refresh()),
       this.contextService.onDidChange(() => this.refresh()),
       this.discovery.onDidChange(() => this.refresh()),
+      this.remote.onDidChange(() => this.refresh()),
       vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('snipPick')) this.refresh();
       }),
@@ -88,15 +91,37 @@ export class LibraryTreeProvider
         return this.discoveryGroups(element.folderUri);
       case 'discoveryGroup':
         return this.discoveryItems(element.folderUri, element.source);
+      case 'remoteVault':
+        return [
+          {
+            kind: 'remoteNotice',
+            vaultId: element.vaultId,
+            message: 'Sync is not implemented yet',
+          },
+        ];
       default:
         return [];
     }
   }
 
   private rootNodes(): TreeNode[] {
+    const remote = this.remoteNodes();
     // An empty tree lets the view's welcome content ("Add Snippet" / "Add Command") show through.
-    if (this.isLibraryEmpty()) return [];
-    return this.store.scopes().map((scope) => ({ kind: 'scope', scopeId: scope.id }) as TreeNode);
+    if (this.isLibraryEmpty() && remote.length === 0) return [];
+    return [
+      ...this.store.scopes().map((scope) => ({ kind: 'scope', scopeId: scope.id }) as TreeNode),
+      ...remote,
+    ];
+  }
+
+  /** Mounted remote vaults sit beside the local scopes, so where the bytes live stays a detail. */
+  private remoteNodes(): TreeNode[] {
+    const state = this.remote.current();
+    if (!state.serverUrl) return [];
+    if (!this.remote.signedIn()) return [{ kind: 'signIn' }];
+    return this.remote
+      .mounted()
+      .map((vault) => ({ kind: 'remoteVault', serverUrl: state.serverUrl!, vaultId: vault.id }));
   }
 
   private isLibraryEmpty(): boolean {
@@ -189,6 +214,12 @@ export class LibraryTreeProvider
         return { kind: 'discoveryRoot', folderUri: element.folderUri };
       case 'discoveryItem':
         return { kind: 'discoveryGroup', folderUri: element.folderUri, source: element.source };
+      case 'remoteNotice': {
+        const state = this.remote.current();
+        return state.serverUrl
+          ? { kind: 'remoteVault', serverUrl: state.serverUrl, vaultId: element.vaultId }
+          : undefined;
+      }
       default:
         return undefined;
     }
@@ -230,6 +261,39 @@ export class LibraryTreeProvider
         );
         node.iconPath = new vscode.ThemeIcon('list-tree');
         node.contextValue = 'discoveredGroup';
+        return node;
+      }
+      case 'remoteVault': {
+        const vault = this.remote.vaults().find((entry) => entry.id === element.vaultId);
+        const node = new vscode.TreeItem(
+          vault?.name ?? '(unknown vault)',
+          vscode.TreeItemCollapsibleState.Collapsed,
+        );
+        node.iconPath = new vscode.ThemeIcon(
+          vault?.kind === 'personal' ? 'account' : 'organization',
+        );
+        node.description = vault?.organization.name;
+        node.contextValue = 'remoteVault';
+        node.tooltip = new vscode.MarkdownString(
+          `**${vault?.name ?? 'Vault'}**\n\n${vault?.kind === 'personal' ? 'Your private vault' : 'Shared project vault'} on \`${element.serverUrl}\``,
+        );
+        return node;
+      }
+      case 'remoteNotice': {
+        const node = new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None);
+        node.iconPath = new vscode.ThemeIcon('info');
+        node.contextValue = 'remoteNotice';
+        return node;
+      }
+      case 'signIn': {
+        const node = new vscode.TreeItem(
+          'Sign in to load remote vaults',
+          vscode.TreeItemCollapsibleState.None,
+        );
+        node.iconPath = new vscode.ThemeIcon('sign-in');
+        node.contextValue = 'signIn';
+        node.description = this.remote.current().serverUrl;
+        node.command = { command: 'snipPick.signIn', title: 'Sign In' };
         return node;
       }
       case 'discoveryItem': {

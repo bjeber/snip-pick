@@ -1,0 +1,19 @@
+{
+  "name": "@snip-pick/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OAuth 2.1 + PKCE flow and typed client for the Snip Pick API. Platform-agnostic.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@snip-pick/core": "*"
+  }
+}

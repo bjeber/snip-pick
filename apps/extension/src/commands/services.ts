@@ -1,6 +1,7 @@
 import type * as vscode from 'vscode';
 import type { ContextService } from '../context/contextService';
 import type { DiscoveryService } from '../discovery/discoveryService';
+import type { RemoteService } from '../remote/remoteService';
 import type { ItemRunner } from '../runner/runner';
 import type { SecretsStore } from '../store/secrets';
 import type { Store } from '../store/store';
@@ -16,6 +17,7 @@ export interface Services {
   secrets: SecretsStore;
   contextService: ContextService;
   discovery: DiscoveryService;
+  remote: RemoteService;
   runner: ItemRunner;
   tree: LibraryTreeProvider;
   treeView: vscode.TreeView<TreeNode>;

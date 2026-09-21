@@ -226,6 +226,29 @@
         "command": "snipPick.activate",
         "title": "Insert or Run",
         "category": "Snip Pick"
+      },
+      {
+        "command": "snipPick.signIn",
+        "title": "Sign In to a Server\u2026",
+        "category": "Snip Pick",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "snipPick.signOut",
+        "title": "Sign Out",
+        "category": "Snip Pick",
+        "icon": "$(sign-out)"
+      },
+      {
+        "command": "snipPick.selectVaults",
+        "title": "Select Vaults\u2026",
+        "category": "Snip Pick",
+        "icon": "$(cloud)"
+      },
+      {
+        "command": "snipPick.refreshRemote",
+        "title": "Refresh Remote Vaults",
+        "category": "Snip Pick"
       }
     ],
     "menus": {
@@ -362,6 +385,21 @@
           "command": "snipPick.clearSecrets",
           "when": "view == snipPick.library",
           "group": "2_secrets@2"
+        },
+        {
+          "command": "snipPick.selectVaults",
+          "when": "view == snipPick.library",
+          "group": "3_remote@1"
+        },
+        {
+          "command": "snipPick.signIn",
+          "when": "view == snipPick.library",
+          "group": "3_remote@2"
+        },
+        {
+          "command": "snipPick.signOut",
+          "when": "view == snipPick.library",
+          "group": "3_remote@3"
         }
       ],
       "view/item/context": [
@@ -449,6 +487,11 @@
           "command": "snipPick.deleteGroup",
           "when": "view == snipPick.library && viewItem == group",
           "group": "3_delete@1"
+        },
+        {
+          "command": "snipPick.selectVaults",
+          "when": "view == snipPick.library && viewItem == remoteVault",
+          "group": "inline@1"
         }
       ]
     },
@@ -462,11 +505,6 @@
     "configuration": {
       "title": "Snip Pick",
       "properties": {
-        "snipPick.showRelevantOnly": {
-          "type": "boolean",
-          "default": false,
-          "description": "Only show items that are relevant to the active file."
-        },
         "snipPick.clickAction": {
           "type": "string",
           "enum": [
@@ -482,18 +520,10 @@
           "default": "insertOrRun",
           "description": "What happens when an item in the tree is clicked."
         },
-        "snipPick.runBehavior": {
-          "type": "string",
-          "enum": [
-            "paste",
-            "execute"
-          ],
-          "enumDescriptions": [
-            "Paste the command into the terminal without pressing Enter.",
-            "Paste the command and execute it immediately."
-          ],
-          "default": "paste",
-          "description": "Whether commands are pasted into the terminal or executed right away."
+        "snipPick.completions.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer snippets that have a prefix as IntelliSense completion items."
         },
         "snipPick.confirmDangerous": {
           "type": "boolean",
@@ -514,13 +544,37 @@
           "default": true,
           "description": "Show a read-only \"Discovered\" node with package.json scripts, Makefile targets and justfile recipes."
         },
-        "snipPick.completions.enabled": {
+        "snipPick.remote.url": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Base URL of a Snip Pick API, e.g. `https://snippets.your-company.internal`. Leave empty to stay entirely local. Set it in workspace settings to point a project at your company server."
+        },
+        "snipPick.runBehavior": {
+          "type": "string",
+          "enum": [
+            "paste",
+            "execute"
+          ],
+          "enumDescriptions": [
+            "Paste the command into the terminal without pressing Enter.",
+            "Paste the command and execute it immediately."
+          ],
+          "default": "paste",
+          "description": "Whether commands are pasted into the terminal or executed right away."
+        },
+        "snipPick.showRelevantOnly": {
           "type": "boolean",
-          "default": true,
-          "description": "Offer snippets that have a prefix as IntelliSense completion items."
+          "default": false,
+          "description": "Only show items that are relevant to the active file."
         }
       }
-    }
+    },
+    "authentication": [
+      {
+        "id": "snip-pick",
+        "label": "Snip Pick"
+      }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
@@ -535,7 +589,8 @@
   },
   "dependencies": {
     "@snip-pick/core": "*",
-    "minimatch": "^10.0.1"
+    "minimatch": "^10.0.1",
+    "@snip-pick/api-client": "*"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",
