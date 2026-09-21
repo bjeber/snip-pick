@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type * as vscode from 'vscode';
-import type { Item } from '@snip-pick/core';
+import type { Item } from '@snip-pick/contracts';
 
 export interface GroupOption {
   id: string;

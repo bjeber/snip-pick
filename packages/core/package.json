@@ -2,7 +2,7 @@
   "name": "@snip-pick/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Data model, relevance scoring, template parsing and importers shared by the Snip Pick extension and API.",
+  "description": "Ranking, variable expansion, danger detection, merging, discovery and import. Platform-agnostic.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -14,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "minimatch": "^10.0.1"
+    "@snip-pick/contracts": "workspace:*",
+    "minimatch": "catalog:"
   }
 }

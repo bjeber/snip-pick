@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newId } from '../src/model/ids';
-import { bodyPreview, commandText, emptyFile } from '../src/model/types';
+import { bodyPreview, commandText, emptyFile } from '../src/types';
 import { makeItem } from './helpers';
 
 describe('emptyFile', () => {
@@ -34,13 +33,5 @@ describe('bodyPreview', () => {
   it('leaves short bodies alone and previews chains', () => {
     expect(bodyPreview(makeItem({ body: 'ls' }))).toBe('ls');
     expect(bodyPreview(makeItem({ body: '', steps: ['a', 'b'] }))).toBe('a && b');
-  });
-});
-
-describe('newId', () => {
-  it('returns distinct UUIDs', () => {
-    const first = newId();
-    expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-    expect(newId()).not.toBe(first);
   });
 });

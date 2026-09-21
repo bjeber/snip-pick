@@ -1,4 +1,4 @@
-import type { MeResponse, VaultListResponse, VaultSummary } from '@snip-pick/core';
+import type { MeResponse, VaultListResponse, VaultSummary } from '@snip-pick/contracts';
 import type { FetchLike } from './discovery';
 
 export class ApiError extends Error {

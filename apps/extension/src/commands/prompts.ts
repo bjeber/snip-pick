@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { bodyPreview, groupPath } from '@snip-pick/core';
+import { groupPath } from '@snip-pick/core';
+import { bodyPreview } from '@snip-pick/contracts';
 import type { ItemRef, ScopeInfo, Store } from '../store/store';
 import type { TreeNode } from '../ui/tree/nodes';
 

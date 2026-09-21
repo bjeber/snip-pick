@@ -1,19 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
-import { db } from '../db/client';
-import { member, organization, team, teamMember } from '../db/auth-schema';
-import { vault, type VaultRow } from '../db/schema';
+import type { OrganizationRef, VaultSummary } from '@snip-pick/contracts';
+import { member, organization, team, teamMember, vault, type VaultRow } from '@snip-pick/db';
+import { db } from '../db';
 
-export interface VaultSummary {
-  id: string;
-  name: string;
-  kind: 'personal' | 'project';
-  revision: number;
-  organization: { id: string; name: string; slug: string };
-  teamId?: string;
-}
-
-function toSummary(row: VaultRow, org: { id: string; name: string; slug: string }): VaultSummary {
+function toSummary(row: VaultRow, org: OrganizationRef): VaultSummary {
   return {
     id: row.id,
     name: row.name,

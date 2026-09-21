@@ -2,20 +2,22 @@ import * as vscode from 'vscode';
 import { log } from '../log';
 import {
   descendantGroupIds,
-  emptyFile,
   mergeFiles,
   newId,
   normalizeFile,
-  parseFile,
-  serializeFile,
   wouldCreateCycle,
-  type Group,
-  type Item,
   type MergeResult,
   type MergeStrategy,
+} from '@snip-pick/core';
+import {
+  emptyFile,
+  parseFile,
+  serializeFile,
+  type Group,
+  type Item,
   type Scope,
   type SnipPickFile,
-} from '@snip-pick/core';
+} from '@snip-pick/contracts';
 
 /** Scope ids are runtime-only; nothing on disk keys off them. */
 export const USER_SCOPE_ID = 'user';

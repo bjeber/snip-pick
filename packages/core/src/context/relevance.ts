@@ -1,5 +1,5 @@
 import { minimatch } from 'minimatch';
-import type { ItemContext } from '../model/types';
+import type { ItemContext } from '@snip-pick/contracts';
 
 /** Everything the relevance calculation needs to know about the active editor. */
 export interface RelevanceContext {

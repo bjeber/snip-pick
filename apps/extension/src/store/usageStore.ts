@@ -1,5 +1,6 @@
 import type * as vscode from 'vscode';
-import { pruneUsage, recordUse, type Usage, type UsageEntry } from '@snip-pick/core';
+import { pruneUsage, recordUse } from '@snip-pick/core';
+import { type Usage, type UsageEntry } from '@snip-pick/contracts';
 import { USER_SCOPE_ID } from './store';
 
 export const USAGE_KEY = 'snipPick.usage';

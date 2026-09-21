@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { migrate, parseFile, serializeFile, validateFile } from '../src/model/schema';
+import { migrate, parseFile, serializeFile, validateFile } from '../src/schema';
 import { makeFile, makeItem } from './helpers';
 
 describe('parseFile', () => {

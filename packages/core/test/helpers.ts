@@ -1,4 +1,4 @@
-import type { Item, SnipPickFile } from '../src/model/types';
+import type { Item, SnipPickFile } from '@snip-pick/contracts';
 
 let counter = 0;
 

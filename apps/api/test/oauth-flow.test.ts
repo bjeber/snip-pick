@@ -26,14 +26,16 @@ describe.skipIf(!CONFIGURED)('OAuth 2.1 authorization code flow', () => {
 
   beforeAll(async () => {
     process.env.PORT = '0';
-    // Imported lazily: these modules read (and validate) the environment at import time.
+    // Imported lazily: the app's composition root reads (and validates) the environment and
+    // opens the pool at import time, which is exactly what the skip above is guarding.
     const { serve } = await import('@hono/node-server');
+    const { seedVsCodeClient } = await import('@snip-pick/auth');
     const { createApp } = await import('../src/http/app');
-    const { seedVsCodeClient } = await import('../src/bootstrap');
-    const { pool } = await import('../src/db/client');
-    closePool = () => pool.end();
+    const { config } = await import('../src/config');
+    const { db, closeDb } = await import('../src/db');
+    closePool = closeDb;
 
-    await seedVsCodeClient();
+    await seedVsCodeClient(db, config);
     server = await new Promise<Server>((resolve) => {
       const instance = serve({ fetch: createApp().fetch, port: 0 }, (info) => {
         base = `http://127.0.0.1:${info.port}`;

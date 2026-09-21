@@ -1,13 +1,7 @@
 import * as vscode from 'vscode';
 import type { ContextService } from '../../context/contextService';
-import {
-  bodyPreview,
-  commandText,
-  rankItems,
-  scoreRelevance,
-  type Group,
-  type Item,
-} from '@snip-pick/core';
+import { rankItems, scoreRelevance } from '@snip-pick/core';
+import { bodyPreview, commandText, type Group, type Item } from '@snip-pick/contracts';
 import type { DiscoveryService } from '../../discovery/discoveryService';
 import type { RemoteService } from '../../remote/remoteService';
 import type { ItemRef, ScopeInfo, Store } from '../../store/store';
@@ -408,8 +402,9 @@ export class LibraryTreeProvider
     try {
       for (const node of nodes) {
         if (node.kind === 'item') await this.dropItem(node.scopeId, node.itemId, destination);
-        else if (node.kind === 'group')
+        else if (node.kind === 'group') {
           await this.dropGroup(node.scopeId, node.groupId, destination, target);
+        }
       }
     } catch (error) {
       void vscode.window.showErrorMessage(`Snip Pick: ${(error as Error).message}`);
@@ -445,8 +440,11 @@ export class LibraryTreeProvider
       await this.store.moveItem({ scopeId, itemId }, destination.scopeId, destination.groupId);
       return;
     }
-    if (!(await confirmScopeMove(this.store.scope(scopeId), this.store.scope(destination.scopeId))))
+    if (
+      !(await confirmScopeMove(this.store.scope(scopeId), this.store.scope(destination.scopeId)))
+    ) {
       return;
+    }
     await this.store.moveItem({ scopeId, itemId }, destination.scopeId, destination.groupId);
   }
 

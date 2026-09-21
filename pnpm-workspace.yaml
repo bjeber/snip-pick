@@ -1,0 +1,57 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# pnpm does not run a dependency's install scripts unless it is listed here. These are the three
+# that have them, and all three keep the behaviour npm gave them: esbuild's postinstall fetches
+# the platform binary it cannot work without, and keytar and vsce-sign are @vscode/vsce's native
+# pieces. Only `vsce publish` appears to need those two, and the release workflow is the one path
+# that cannot be exercised outside a real release — so they stay on rather than being trimmed on
+# a guess.
+allowBuilds:
+  esbuild: true
+  keytar: true
+  '@vscode/vsce-sign': true
+
+# Every external dependency's version range, in one place.
+#
+# Each package.json says `"drizzle-orm": "catalog:"` and the range lives here, so a bump is one
+# line rather than one per manifest, and two packages cannot end up on different versions of
+# something they both load. drizzle-orm is in three manifests and hono in two, which is where
+# that drift would have started.
+#
+# catalogMode: strict keeps it that way, in both directions. `pnpm add` of something this file
+# does not list adds it here and writes `catalog:` into that manifest, so nobody has to remember
+# to; `pnpm add` of a version that conflicts with an entry already here is refused outright. Either
+# way no manifest ends up carrying a version range of its own.
+#
+# One exception, deliberately not catalogued: @types/vscode in apps/extension. vsce reads that
+# range straight out of package.json to work out the minimum VS Code version an extension
+# supports, and it does not resolve the catalog: protocol — `vsce package` fails outright with
+# "Failed to parse semver of @types/vscode". Anything else parsing a manifest without going
+# through pnpm has the same problem.
+catalogMode: strict
+catalog:
+  '@better-auth/oauth-provider': ^1.7.5 # plugin for better-auth; the two versions move together
+  '@hono/node-server': ^1.13.7
+  '@types/mocha': ^10.0.9
+  '@types/node': ^20.17.6
+  '@types/pg': ^8.23.1 # types for pg
+  '@vitest/coverage-v8': ^2.1.4
+  '@vscode/test-cli': ^0.0.10
+  '@vscode/test-electron': ^2.4.1
+  '@vscode/vsce': ^3.2.0
+  better-auth: ^1.7.5 # see @better-auth/oauth-provider
+  drizzle-kit: ^0.31.10 # generates migrations for drizzle-orm; keep in step with it
+  drizzle-orm: ^0.45.2
+  esbuild: ^0.24.0
+  hono: ^4.13.8
+  jose: ^6.0.0
+  minimatch: ^10.0.1
+  ovsx: ^0.10.0
+  oxfmt: 0.68.0 # exact: pre-1.0, and it formats every file in the repo
+  oxlint: 1.83.0 # exact: a range here would change what CI rejects without a lockfile diff
+  pg: ^8.23.0
+  tsx: ^4.19.2
+  typescript: ^5.6.3
+  vitest: ^2.1.4

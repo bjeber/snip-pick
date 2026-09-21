@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { newId, type Item } from '@snip-pick/core';
+import { newId } from '@snip-pick/core';
+import { type Item } from '@snip-pick/contracts';
 import { openItemEditor } from '../ui/editor/editorPanel';
 import { guard } from './itemCommands';
 import { pickGroup, pickScope, toGroupRef, toScopeId } from './prompts';
@@ -77,11 +78,12 @@ async function createSnippet(services: Services, arg: unknown, body: string): Pr
         { select: true, focus: false },
       )
       .then(undefined, () => undefined);
-    if (body.length === 0)
+    if (body.length === 0) {
       openItemEditor(services.context, services.store, {
         scopeId: target.scopeId,
         itemId: item.id,
       });
+    }
   });
 }
 

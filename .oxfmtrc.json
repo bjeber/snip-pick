@@ -1,0 +1,18 @@
+{
+  "printWidth": 100,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "semi": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "**/dist/",
+    "**/out/",
+    "**/node_modules/",
+    "**/coverage/",
+    "**/drizzle/",
+    "CHANGELOG.md",
+    "apps/extension/CHANGELOG.md"
+  ]
+}

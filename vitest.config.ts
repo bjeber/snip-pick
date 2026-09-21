@@ -6,17 +6,19 @@ export default defineConfig({
       'packages/*/test/**/*.test.ts',
       'apps/extension/test/unit/**/*.test.ts',
       'apps/api/test/**/*.test.ts',
+      'test/**/*.test.ts',
     ],
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: [
-        'packages/core/src/**',
-        'packages/api-client/src/**',
-        'apps/extension/src/ui/editor/html.ts',
-        'apps/api/src/**',
+      include: ['packages/*/src/**', 'apps/extension/src/ui/editor/html.ts', 'apps/api/src/**'],
+      exclude: [
+        '**/index.ts',
+        '**/*.d.ts',
+        // Table definitions and generated better-auth schema: shape, not behaviour.
+        'packages/db/src/schema.ts',
+        'packages/db/src/auth-schema.ts',
       ],
-      exclude: ['**/index.ts', 'apps/api/src/db/schema.ts'],
     },
   },
 });

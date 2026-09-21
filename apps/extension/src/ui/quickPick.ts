@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import type { ContextService } from '../context/contextService';
-import { bodyPreview, groupPath, rankItems, type Item } from '@snip-pick/core';
+import { groupPath, rankItems } from '@snip-pick/core';
+import { bodyPreview, type Item } from '@snip-pick/contracts';
 import type { Store } from '../store/store';
 import type { UsageStore } from '../store/usageStore';
 

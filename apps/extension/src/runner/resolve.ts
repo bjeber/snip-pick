@@ -5,9 +5,9 @@ import {
   parseTemplate,
   renderTemplate,
   type BuiltinName,
-  type Item,
   type TemplateValues,
 } from '@snip-pick/core';
+import { type Item } from '@snip-pick/contracts';
 import type { SecretsStore } from '../store/secrets';
 import type { VariableHistory } from '../store/history';
 

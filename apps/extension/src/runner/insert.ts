@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { Item } from '@snip-pick/core';
+import type { Item } from '@snip-pick/contracts';
 
 /**
  * Inserts a snippet at the cursor (replacing the selection). With no editor open the body is put

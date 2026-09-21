@@ -1,0 +1,20 @@
+{
+  "name": "@snip-pick/auth-verify",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Resource-server side of OAuth: verifies access tokens against a JWK set. No database, no authorization server.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "hono": "catalog:",
+    "jose": "catalog:"
+  }
+}

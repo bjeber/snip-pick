@@ -1,0 +1,191 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Matches what the eslint config had: js+typescript recommended and the rules below. oxlint
+  // turns unicorn and oxc on by default; they are worth a look, but a toolchain swap is not the
+  // place to start enforcing rules the project never opted into.
+  "plugins": ["typescript"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/out/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/.vscode-test/**",
+    "**/drizzle/**"
+  ],
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "typescript/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports",
+        "fixStyle": "inline-type-imports"
+      }
+    ],
+    "eqeqeq": ["error", "smart"],
+    "curly": ["error", "multi-line"],
+    "no-console": "error"
+  },
+  // Boundary rules. oxlint REPLACES a rule's options when a later override sets the same rule
+  // rather than merging them (eslint does the same), so the last block matching a file is the only
+  // one that applies -- each block below restates everything its files are banned from. JSON
+  // cannot share the list the way eslint.config.mjs did, so test/boundaries.test.ts asserts the
+  // behaviour instead of trusting the shape.
+  "overrides": [
+    {
+      // Server code must not reach for the editor API. It is what lets the model, the sync client
+      // and the server share one contract, and what keeps all three testable.
+      "files": ["packages/**/*.ts", "apps/api/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vscode",
+                "message": "Shared packages and the API must not depend on the VS Code API."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // ...and the extension must not reach for the server. It legitimately imports vscode, so
+      // this is the one place the editor API is allowed.
+      //
+      // The `/**` suffixes matter: a bare `drizzle-orm/*` matches `drizzle-orm/node-postgres` but
+      // not `drizzle-orm/node-postgres/migrator`, which is a path this repo really imports.
+      "files": ["apps/extension/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@snip-pick/auth",
+                  "@snip-pick/auth-verify",
+                  "@snip-pick/config",
+                  "@snip-pick/db",
+                  "@snip-pick/api",
+                  "better-auth",
+                  "better-auth/**",
+                  "@better-auth/**",
+                  "drizzle-orm",
+                  "drizzle-orm/**",
+                  "drizzle-kit",
+                  "pg",
+                  "hono",
+                  "hono/**"
+                ],
+                "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The sync client talks to the server over HTTP; it does not link against it.
+      "files": ["packages/api-client/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vscode",
+                "message": "Shared packages and the API must not depend on the VS Code API."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@snip-pick/auth",
+                  "@snip-pick/auth-verify",
+                  "@snip-pick/config",
+                  "@snip-pick/db",
+                  "@snip-pick/api",
+                  "better-auth",
+                  "better-auth/**",
+                  "@better-auth/**",
+                  "drizzle-orm",
+                  "drizzle-orm/**",
+                  "drizzle-kit",
+                  "pg",
+                  "hono",
+                  "hono/**"
+                ],
+                "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The isomorphic packages carry no platform at all, so they stay usable from a web extension
+      // host. packages/core/src/platform.d.ts is the one place that names a global.
+      //
+      // `regex` rather than a group for node: oxlint matches groups gitignore-style, so `*` stops
+      // at a `/` and only `**` spans segments. `node:` is a protocol rather than a path, and
+      // neither `node:*` nor `node:**` matches `node:fs/promises`. Only the regex does.
+      "files": ["packages/contracts/**/*.ts", "packages/core/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vscode",
+                "message": "Shared packages and the API must not depend on the VS Code API."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@snip-pick/auth",
+                  "@snip-pick/auth-verify",
+                  "@snip-pick/config",
+                  "@snip-pick/db",
+                  "@snip-pick/api",
+                  "better-auth",
+                  "better-auth/**",
+                  "@better-auth/**",
+                  "drizzle-orm",
+                  "drizzle-orm/**",
+                  "drizzle-kit",
+                  "pg",
+                  "hono",
+                  "hono/**"
+                ],
+                "message": "Server-only. The extension is bundled from its import graph, so this would ship a database driver inside the VSIX."
+              },
+              {
+                "regex": "^node:",
+                "message": "This package must run in a web extension host too. Use a platform-neutral API."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Build scripts and tests run outside the extension host.
+      "files": ["**/*.mjs", "**/test/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

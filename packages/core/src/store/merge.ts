@@ -1,5 +1,5 @@
 import { normalizeFile } from '../model/normalize';
-import { emptyFile, type Group, type Item, type SnipPickFile } from '../model/types';
+import { emptyFile, type Group, type Item, type SnipPickFile } from '@snip-pick/contracts';
 
 export type MergeStrategy = 'merge' | 'replace';
 

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { newId, type Item } from '@snip-pick/core';
+import { newId } from '@snip-pick/core';
+import { type Item } from '@snip-pick/contracts';
 import type { DiscoveryItemNode } from '../ui/tree/nodes';
 import { guard } from './itemCommands';
 import { pickGroup, pickScope } from './prompts';

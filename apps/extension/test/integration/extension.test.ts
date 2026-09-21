@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 import type { SnipPickApi } from '../../src/extension';
-import type { Item } from '@snip-pick/core';
+import type { Item } from '@snip-pick/contracts';
 
 const EXTENSION_ID = 'bieber.snip-pick';
 

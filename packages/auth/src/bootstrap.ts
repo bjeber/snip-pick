@@ -1,8 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { oauthClient, oauthClientResource } from './db/auth-schema';
-import { db } from './db/client';
-import { env, VSCODE_CLIENT_ID } from './env';
+import { VSCODE_CLIENT_ID } from '@snip-pick/config';
+import { oauthClient, oauthClientResource, type Database } from '@snip-pick/db';
+
+/** The slice of the server configuration client seeding needs. */
+export interface SeedConfig {
+  readonly resource: string;
+  readonly vscodeRedirectUris: readonly string[];
+}
 
 /**
  * Seeds the first-party VS Code client.
@@ -15,11 +20,12 @@ import { env, VSCODE_CLIENT_ID } from './env';
  * application must be — it cannot keep a secret — and is exactly what makes the server enforce
  * PKCE on it.
  */
-export async function seedVsCodeClient(): Promise<void> {
+export async function seedVsCodeClient(db: Database, config: SeedConfig): Promise<void> {
   const now = new Date();
   const values = {
     name: 'Snip Pick for VS Code',
-    redirectUris: env.vscodeRedirectUris,
+    // Copied, not aliased: the config is readonly and drizzle wants an owned array.
+    redirectUris: [...config.vscodeRedirectUris],
     tokenEndpointAuthMethod: 'none',
     applicationType: 'native',
     grantTypes: ['authorization_code', 'refresh_token'],
@@ -38,7 +44,7 @@ export async function seedVsCodeClient(): Promise<void> {
     .values({ id: VSCODE_CLIENT_ID, clientId: VSCODE_CLIENT_ID, createdAt: now, ...values })
     .onConflictDoUpdate({ target: oauthClient.clientId, set: values });
 
-  await linkClientToResource(VSCODE_CLIENT_ID, env.resource);
+  await linkClientToResource(db, VSCODE_CLIENT_ID, config.resource);
 }
 
 /**
@@ -48,7 +54,11 @@ export async function seedVsCodeClient(): Promise<void> {
  * a client may only ask for tokens scoped to resources it has been linked to. That check is the
  * point of audience binding, so the link is explicit here rather than disabled globally.
  */
-export async function linkClientToResource(clientId: string, resource: string): Promise<void> {
+export async function linkClientToResource(
+  db: Database,
+  clientId: string,
+  resource: string,
+): Promise<void> {
   const existing = await db.query.oauthClientResource.findFirst({
     where: and(
       eq(oauthClientResource.clientId, clientId),
@@ -69,7 +79,7 @@ export async function linkClientToResource(clientId: string, resource: string): 
 }
 
 /** Whether the seeded client is present — used by the health check. */
-export async function vsCodeClientExists(): Promise<boolean> {
+export async function vsCodeClientExists(db: Database): Promise<boolean> {
   const row = await db.query.oauthClient.findFirst({
     where: eq(oauthClient.clientId, VSCODE_CLIENT_ID),
     columns: { id: true },

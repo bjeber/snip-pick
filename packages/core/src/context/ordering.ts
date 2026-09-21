@@ -1,4 +1,4 @@
-import type { Item, Usage } from '../model/types';
+import type { Item, Usage } from '@snip-pick/contracts';
 import { frecency } from './frecency';
 import { scoreRelevance, type Relevance, type RelevanceContext } from './relevance';
 

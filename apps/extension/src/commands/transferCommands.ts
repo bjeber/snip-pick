@@ -4,11 +4,10 @@ import {
   itemsToCodeSnippets,
   newId,
   parseCodeSnippets,
-  parseFile,
-  serializeFile,
   snippetsToItems,
   type MergeStrategy,
 } from '@snip-pick/core';
+import { parseFile, serializeFile } from '@snip-pick/contracts';
 import { guard } from './itemCommands';
 import { pickGroup, pickScope, toGroupRef } from './prompts';
 import type { Services } from './services';

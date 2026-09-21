@@ -237,17 +237,17 @@ live on the tree's context menus, where they have something to act on.
 ## Development
 
 ```sh
-npm install
-npm run watch      # esbuild in watch mode
+pnpm install
+pnpm run watch      # esbuild in watch mode
 # press F5 in VS Code to launch an Extension Development Host
-npm run lint
-npm run test:unit
-npm run test:coverage
-npm run test:integration
-npm run package    # produces a .vsix
+pnpm run lint
+pnpm run test:unit
+pnpm run test:coverage
+pnpm run test:integration
+pnpm run package    # produces a .vsix
 ```
 
-`npm run icon` regenerates `media/icon.png` from `media/icon.svg`.
+`pnpm run icon` regenerates `media/icon.png` from `media/icon.svg`.
 
 The pure logic — schema validation, merging, relevance, frecency, the variable parser, the danger
 heuristics, the discovery parsers and the importers — lives in modules free of `vscode` imports, so

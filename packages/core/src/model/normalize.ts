@@ -1,4 +1,4 @@
-import type { Group, Item, SnipPickFile } from './types';
+import type { Group, Item, SnipPickFile } from '@snip-pick/contracts';
 
 /**
  * Repairs references that would otherwise break the tree: unknown `groupId`/`parentId` values and
