@@ -35,7 +35,7 @@ catalog:
   '@better-auth/oauth-provider': ^1.7.5 # plugin for better-auth; the two versions move together
   '@hono/node-server': ^1.13.7
   '@types/mocha': ^10.0.9
-  '@types/node': ^22.0.0
+  '@types/node': ^26.6.2
   '@types/pg': ^8.23.1 # types for pg
   '@vitest/coverage-v8': ^5.0.1
   '@vscode/test-cli': ^0.0.10
