@@ -40,7 +40,7 @@ catalog:
   '@vitest/coverage-v8': ^5.0.1
   '@vscode/test-cli': ^0.0.10
   '@vscode/test-electron': ^2.4.1
-  '@vscode/vsce': ^3.2.0
+  '@vscode/vsce': ^4.0.0
   better-auth: ^1.7.5 # see @better-auth/oauth-provider
   drizzle-kit: ^0.31.10 # generates migrations for drizzle-orm; keep in step with it
   drizzle-orm: ^0.45.2
