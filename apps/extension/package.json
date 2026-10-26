@@ -596,7 +596,7 @@
     "@snip-pick/contracts": "workspace:*",
     "@snip-pick/core": "workspace:*",
     "@types/mocha": "catalog:",
-    "@types/vscode": "^1.95.0",
+    "@types/vscode": "^1.140.0",
     "@vscode/test-cli": "catalog:",
     "@vscode/test-electron": "catalog:",
     "@vscode/vsce": "catalog:",
